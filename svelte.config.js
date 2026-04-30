@@ -4,6 +4,9 @@ import adapter from '@sveltejs/adapter-node';
 const config = {
   kit: {
     adapter: adapter(),
+    paths: {
+      base: '/pomotask',
+    },
     alias: {
       $lib: 'src/lib',
       $server: 'src/lib/server',
