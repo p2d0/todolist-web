@@ -1,4 +1,5 @@
 <script>
+  import { base } from '$app/paths';
   import { onMount } from 'svelte';
   import dayjs from 'dayjs';
   import { timerStore } from '$lib/stores/timer.js';
@@ -54,7 +55,7 @@
 
   async function getCircleData(habit, date) {
     if (habit.habit_type === 'timer') {
-      const res = await fetch(`/api/sessions?type=minutes&habitId=${habit.id}&date=${date}`);
+      const res = await fetch(`${base}/api/sessions?type=minutes&habitId=${habit.id}&date=${date}`);
       const data = await res.json();
       const mins = data.minutes;
       if (mins > 0) {
@@ -64,13 +65,13 @@
     }
 
     if (habit.habit_type === 'boolean') {
-      const res = await fetch(`/api/sessions?type=has&habitId=${habit.id}&date=${date}`);
+      const res = await fetch(`${base}/api/sessions?type=has&habitId=${habit.id}&date=${date}`);
       const data = await res.json();
       return { label: data.has ? '✓' : '', state: data.has ? 'complete' : 'empty' };
     }
 
     if (habit.habit_type === 'number') {
-      const res = await fetch(`/api/sessions?type=value&habitId=${habit.id}&date=${date}`);
+      const res = await fetch(`${base}/api/sessions?type=value&habitId=${habit.id}&date=${date}`);
       const data = await res.json();
       if (data.value !== null && data.value !== undefined) {
         if (habit.min_value !== null && habit.min_value !== undefined && data.value >= habit.min_value) {
@@ -122,7 +123,7 @@
     const elapsed = getElapsed();
     const date = dayjs().format('YYYY-MM-DD');
 
-    await fetch('/api/sessions', {
+    await fetch(`${base}/api/sessions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -152,7 +153,7 @@
   }
 
   async function openTimeEditor(circle) {
-    const res = await fetch(`/api/sessions?type=minutes&habitId=${habit.id}&date=${circle.date}`);
+    const res = await fetch(`${base}/api/sessions?type=minutes&habitId=${habit.id}&date=${circle.date}`);
     const data = await res.json();
     editingCircle = { ...circle, durationSeconds: data.minutes * 60 };
     showTimeEditor = true;
@@ -168,9 +169,9 @@
     const data = await res.json();
 
     if (data.has) {
-      await fetch(`/api/sessions?date=${date}&habitId=${habitId}`, { method: 'DELETE' });
+      await fetch(`${base}/api/sessions?date=${date}&habitId=${habitId}`, { method: 'DELETE' });
     } else {
-      await fetch('/api/sessions?type=value', {
+      await fetch(`${base}/api/sessions?type=value`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ habitId, date, value: 1 }),
@@ -181,7 +182,7 @@
   }
 
   async function openNumberInput(habit, date) {
-    const current = await (await fetch(`/api/sessions?type=value&habitId=${habit.id}&date=${date}`)).json();
+    const current = await (await fetch(`${base}/api/sessions?type=value&habitId=${habit.id}&date=${date}`)).json();
     editingNumber = { date, value: current.value };
     showNumberEditor = true;
   }

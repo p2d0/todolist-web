@@ -1,4 +1,5 @@
 <script>
+  import { base } from '$app/paths';
   import { createEventDispatcher } from 'svelte';
 
   const dispatch = createEventDispatcher();
@@ -18,7 +19,7 @@
       minValue: minValue ? Number(minValue) : null,
     };
 
-    const url = editingHabit ? `/api/habits/${editingHabit.id}` : '/api/habits';
+    const url = editingHabit ? `${base}/api/habits/${editingHabit.id}` : `${base}/api/habits`;
     const method = editingHabit ? 'PUT' : 'POST';
 
     const res = await fetch(url, {

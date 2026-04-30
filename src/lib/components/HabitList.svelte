@@ -1,4 +1,5 @@
 <script>
+  import { base } from '$app/paths';
   import HabitRow from './HabitRow.svelte';
   import { onMount } from 'svelte';
 
@@ -24,7 +25,7 @@
   });
 
   async function refresh() {
-    const res = await fetch('/api/habits');
+    const res = await fetch(`${base}/api/habits`);
     const data = await res.json();
     habitsStore.set(data);
   }

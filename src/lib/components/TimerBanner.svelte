@@ -1,4 +1,5 @@
 <script>
+  import { base } from '$app/paths';
   import { timerStore } from '$lib/stores/timer.js';
   export let habitsStore;
   import dayjs from 'dayjs';
@@ -31,7 +32,7 @@
     try {
       const n = new Notification('PomoTasker', {
         body,
-        icon: '/icons/icon-192.png',
+        icon: `${base}/icons/icon-192.png`,
         tag: 'timer-start',
         requireInteraction: true,
         actions: [{ action: 'stop', title: 'Stop Timer' }],
@@ -53,7 +54,7 @@
     try {
       new Notification('PomoTasker', {
         body,
-        icon: '/icons/icon-192.png',
+        icon: `${base}/icons/icon-192.png`,
         tag: 'timer-stop',
         requireInteraction: true,
       });
@@ -158,7 +159,7 @@
 
     if (habit) {
       showStopNotif(habit, elapsed);
-      fetch('/api/sessions', {
+      fetch(`${base}/api/sessions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -191,7 +192,7 @@
       try {
         new Notification('Pomodoro complete!', {
           body: 'Pomodoro session finished!',
-          icon: '/icons/icon-192.png',
+          icon: `${base}/icons/icon-192.png`,
           requireInteraction: true,
           tag: 'pomodoro-done',
         });

@@ -1,4 +1,6 @@
 <script>
+  import { base } from '$app/paths';
+
   export let habitId;
   export let date;
   export let description;
@@ -15,7 +17,7 @@
       return;
     }
 
-    await fetch('/api/sessions?type=value', {
+    await fetch(`${base}/api/sessions?type=value`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ habitId, date, value: Number(newVal) }),
@@ -26,7 +28,7 @@
   }
 
   async function remove() {
-    await fetch(`/api/sessions?date=${date}&habitId=${habitId}`, { method: 'DELETE' });
+    await fetch(`${base}/api/sessions?date=${date}&habitId=${habitId}`, { method: 'DELETE' });
     onSaved();
     onClosed();
   }

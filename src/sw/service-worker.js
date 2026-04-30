@@ -1,7 +1,7 @@
 const CACHE = 'pomotasker-v1';
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(['/'])));
+  e.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(['./'])));
 });
 
 self.addEventListener('fetch', (e) => {

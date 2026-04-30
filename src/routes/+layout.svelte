@@ -1,6 +1,8 @@
 <script>
+  import { base } from '$app/paths';
+
   if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw/service-worker.js');
+    navigator.serviceWorker.register(`${base}/service-worker.js`);
   }
 </script>
 
@@ -10,8 +12,8 @@
   <meta name="theme-color" content="#1e1e2e" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="manifest" href="/manifest.json" />
-  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+  <link rel="manifest" href="{base}/manifest.json" />
+  <link rel="apple-touch-icon" href="{base}/icons/icon-192.png" />
 </svelte:head>
 
 <main class="app">

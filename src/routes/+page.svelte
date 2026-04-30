@@ -4,13 +4,14 @@
   import HabitList from '$lib/components/HabitList.svelte';
   import WeekSummary from '$lib/components/WeekSummary.svelte';
   import AddHabitDialog from '$lib/components/AddHabitDialog.svelte';
+  import { base } from '$app/paths';
   import { habitsStore } from '$lib/stores/timer.js';
 
   let showAddDialog = false;
   let editingHabit = null;
 
   async function loadHabits() {
-    const res = await fetch('/api/habits');
+    const res = await fetch(`${base}/api/habits`);
     const habits = await res.json();
     habitsStore.set(habits);
   }
@@ -30,7 +31,7 @@
 <div class="app-container">
   <TimerBanner {habitsStore} />
   <WeekSummary {habitsStore} />
-  <HabitList {habitsStore} onAdd={() => { editingHabit = null; showAddDialog = true; }} onEdit={(habit) => { editingHabit = habit; showAddDialog = true; }} onDelete={(habit) => { if (confirm(`Delete ${habit.description}?`)) { fetch(`/api/habits/${habit.id}`, { method: 'DELETE' }).then(() => afterDeleteHabit()); } }} />
+  <HabitList {habitsStore} onAdd={() => { editingHabit = null; showAddDialog = true; }} onEdit={(habit) => { editingHabit = habit; showAddDialog = true; }} onDelete={(habit) => { if (confirm(`Delete ${habit.description}?`)) { fetch(`${base}/api/habits/${habit.id}`, { method: 'DELETE' }).then(() => afterDeleteHabit()); } }} />
   {#if showAddDialog}
     <AddHabitDialog {editingHabit} on:close={() => showAddDialog = false} on:added={afterAddHabit} />
   {/if}

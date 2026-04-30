@@ -1,6 +1,8 @@
 <script>
 
 
+  import { base } from '$app/paths';
+
   export let habitsStore;
 
   let summary = '';
@@ -12,7 +14,7 @@
     let totalSeconds = 0;
 
     for (const habit of habits) {
-      const res = await fetch(`/api/sessions?habitId=${habit.id}`);
+      const res = await fetch(`${base}/api/sessions?habitId=${habit.id}`);
       const sessions = await res.json();
       if (Array.isArray(sessions)) {
         totalSessions += sessions.length;
