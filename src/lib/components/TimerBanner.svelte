@@ -54,10 +54,12 @@
       const secs = elapsed % 60;
       timeStr = `${mins}m ${secs}s elapsed`;
     }
-    new Notification('PomoTasker', {
-      tag: 'timer',
-      body: `${habit.description} — ${timeStr}`,
-      icon: '/icons/icon-192.png',
+    navigator.serviceWorker.ready.then(reg => {
+      reg.showNotification('PomoTasker', {
+        tag: 'timer',
+        body: `${habit.description} — ${timeStr}`,
+        icon: '/icons/icon-192.png',
+      });
     });
   }
 
@@ -188,7 +190,12 @@
 
   async function onPomodoroComplete() {
     if (notifPermission === 'granted') {
-      new Notification('Pomodoro complete!', { tag: 'complete', icon: '/icons/icon-192.png' });
+      navigator.serviceWorker.ready.then(reg => {
+      reg.showNotification('Pomodoro complete!', {
+        tag: 'complete',
+        icon: '/icons/icon-192.png',
+      });
+    });
     }
     await stopTimer();
   }
