@@ -5,7 +5,8 @@ node_modules/
 build/
 .svelte-kit/
 
-# SQLite transient files
+# SQLite DB files (dynamic, must not end up in /nix/store)
+data/*.db
 data/*.db-wal
 data/*.db-shm
 

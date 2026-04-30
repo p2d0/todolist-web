@@ -21,7 +21,7 @@
           npmBuildScript = "build";
           installPhase = ''
             mkdir -p $out/lib/node_modules/pomotasker-web
-            cp -r package.json build node_modules data $out/lib/node_modules/pomotasker-web/
+            cp -r package.json build node_modules $out/lib/node_modules/pomotasker-web/
           '';
         };
     in {
@@ -82,6 +82,7 @@
                 Type = "simple";
                 ExecStart = "${pkgs.nodejs_22}/bin/node ${base}/build/index.js";
                 WorkingDirectory = config.pomotasker.dataDir;
+                StateDirectory = "pomotasker";
                 User = "pomotasker";
                 Group = "pomotasker";
                 Restart = "on-failure";
@@ -92,13 +93,6 @@
                   "NODE_PATH=${base}/node_modules"
                 ];
               };
-              preStart = ''
-                mkdir -p ${config.pomotasker.dataDir}/data
-                if [ ! -f ${config.pomotasker.dataDir}/data/pomotasker.db ]; then
-                  cp ${base}/data/pomotasker.db ${config.pomotasker.dataDir}/data/
-                fi
-                chown -R pomotasker:pomotasker ${config.pomotasker.dataDir}
-              '';
             };
           };
         };
