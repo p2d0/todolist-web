@@ -1,0 +1,8 @@
+{
+  "network": {
+    "allowedDomains": [
+      "release-assets.githubusercontent.com",
+      "registry.npmjs.org"
+    ]
+  }
+}

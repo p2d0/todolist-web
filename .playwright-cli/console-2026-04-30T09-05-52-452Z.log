@@ -1,0 +1,80 @@
+[     432ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[     433ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[     433ms] [WARNING] <HabitList> was created without expected prop 'onAdd' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[   60471ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[   74507ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[   74507ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  104726ms] ReferenceError: editHabit is not defined
+    at click_handler (http://localhost:5173/src/lib/components/HabitRow.svelte:513:30)
+    at EventListener.handleEvent*listen (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:466:8)
+    at listen_dev (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:2510:25)
+    at mount (http://localhost:5173/src/lib/components/HabitRow.svelte:234:15)
+    at createProxiedComponent/instrument/targetCmp.$$.fragment.m (http://localhost:5173/node_modules/svelte-hmr/runtime/svelte-hooks.js?v=5917aa74:291:25)
+    at mount_component (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:2083:24)
+    at mount (http://localhost:5173/src/lib/components/HabitList.svelte:75:19)
+    at insert2 (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:1773:11)
+    at update_keyed_each (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:1791:14)
+    at update (http://localhost:5173/src/lib/components/HabitList.svelte:202:19)
+    at update (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:1323:32)
+    at flush (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:1290:15)
+    at promise callback*schedule_update (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:1264:22)
+    at make_dirty (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:2108:5)
+    at init/$$.ctx< (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:2143:28)
+    at instance/hUnsub< (http://localhost:5173/src/lib/components/TimerBanner.svelte:257:56)
+    at set (http://localhost:5173/node_modules/.vite/deps/chunk-7BDCSBRK.js?v=5917aa74:30:35)
+    at loadHabits (http://localhost:5173/src/routes/+page.svelte?t=1777540012866:216:15)
+    at async*afterAddHabit (http://localhost:5173/src/routes/+page.svelte?t=1777540012866:221:9)
+    at createEventDispatcher/</< (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:1226:12)
+    at createEventDispatcher/< (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:1225:25)
+    at submit (http://localhost:5173/src/lib/components/AddHabitDialog.svelte:534:12)
+    at async*listen (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:466:8)
+    at listen_dev (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:2510:25)
+    at mount (http://localhost:5173/src/lib/components/AddHabitDialog.svelte:432:6)
+    at createProxiedComponent/instrument/targetCmp.$$.fragment.m (http://localhost:5173/node_modules/svelte-hmr/runtime/svelte-hooks.js?v=5917aa74:291:25)
+    at mount_component (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:2083:24)
+    at mount (http://localhost:5173/src/routes/+page.svelte?t=1777540012866:54:19)
+    at update (http://localhost:5173/src/routes/+page.svelte?t=1777540012866:158:15)
+    at update (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:1323:32)
+    at flush (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:1290:15)
+    at promise callback*schedule_update (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:1264:22)
+    at make_dirty (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:2108:5)
+    at init/$$.ctx< (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:2143:28)
+    at func (http://localhost:5173/src/routes/+page.svelte?t=1777540012866:231:33)
+    at create_fragment/mount/dispose< (http://localhost:5173/src/lib/components/HabitList.svelte:184:59)
+    at EventListener.handleEvent*listen (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:466:8)
+    at listen_dev (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:2510:25)
+    at mount (http://localhost:5173/src/lib/components/HabitList.svelte:180:15)
+    at createProxiedComponent/instrument/targetCmp.$$.fragment.m (http://localhost:5173/node_modules/svelte-hmr/runtime/svelte-hooks.js?v=5917aa74:291:25)
+    at mount_component (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:2083:24)
+    at mount (http://localhost:5173/src/routes/+page.svelte?t=1777540012866:137:19)
+    at createProxiedComponent/instrument/targetCmp.$$.fragment.m (http://localhost:5173/node_modules/svelte-hmr/runtime/svelte-hooks.js?v=5917aa74:291:25)
+    at mount_component (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:2083:24)
+    at mount (http://localhost:5173/.svelte-kit/generated/root.svelte:277:40)
+    at mount (http://localhost:5173/src/routes/+layout.svelte:80:18)
+    at createProxiedComponent/instrument/targetCmp.$$.fragment.m (http://localhost:5173/node_modules/svelte-hmr/runtime/svelte-hooks.js?v=5917aa74:291:25)
+    at mount_component (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:2083:24)
+    at mount (http://localhost:5173/.svelte-kit/generated/root.svelte:174:40)
+    at mount (http://localhost:5173/.svelte-kit/generated/root.svelte:485:40)
+    at mount_component (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:2083:24)
+    at init (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:2161:20)
+    at Root (http://localhost:5173/.svelte-kit/generated/root.svelte:715:7)
+    at createProxiedComponent (http://localhost:5173/node_modules/svelte-hmr/runtime/svelte-hooks.js?v=5917aa74:341:9)
+    at ProxyComponent (http://localhost:5173/node_modules/svelte-hmr/runtime/proxy.js?v=5917aa74:242:29)
+    at Proxy<Root> (http://localhost:5173/node_modules/svelte-hmr/runtime/proxy.js?v=5917aa74:349:11)
+    at initialize (http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:632:9)
+    at _hydrate (http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:2974:8)
+    at async*start (http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:380:9)
+    at async* (http://localhost:5173/:34:11)
+    at promise callback* (http://localhost:5173/:33:9)
+[  200414ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  217218ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  296016ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  296017ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  540821ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  540821ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  723733ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  723733ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  736661ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  736661ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  795717ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  795717ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322

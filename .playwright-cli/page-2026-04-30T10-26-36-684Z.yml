@@ -1,0 +1,63 @@
+- main [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e68]: Test Habit
+      - generic [ref=e7]: 1m 41s elapsed
+      - generic [ref=e8]:
+        - button "S" [ref=e9] [cursor=pointer]
+        - button "Stop" [ref=e69] [cursor=pointer]
+    - generic [ref=e14]: 16 sessions, 29m total, 1.2 pomodoros
+    - generic [ref=e12]:
+      - generic [ref=e82]:
+        - generic [ref=e83]:
+          - generic [ref=e84]: Test Habit
+          - button "Edit habit" [ref=e85] [cursor=pointer]: ✏️
+          - button "Delete habit" [ref=e86] [cursor=pointer]: 🗑
+        - generic [ref=e87]:
+          - button "M" [ref=e88] [cursor=pointer]
+          - button "T" [ref=e89] [cursor=pointer]
+          - button "W" [ref=e146] [cursor=pointer]
+          - button "4m" [ref=e91] [cursor=pointer]
+          - button "F" [ref=e92] [cursor=pointer]
+          - button "S" [ref=e93] [cursor=pointer]
+          - button "S" [ref=e94] [cursor=pointer]
+      - generic [ref=e95]:
+        - generic [ref=e96]:
+          - generic [ref=e97]: Deep Reading
+          - button "Edit habit" [ref=e98] [cursor=pointer]: ✏️
+          - button "Delete habit" [ref=e99] [cursor=pointer]: 🗑
+        - generic [ref=e100]:
+          - button "M" [ref=e101] [cursor=pointer]
+          - button "T" [ref=e102] [cursor=pointer]
+          - button "W" [ref=e103] [cursor=pointer]
+          - button "T" [ref=e104] [cursor=pointer]
+          - button "F" [ref=e105] [cursor=pointer]
+          - button "S" [ref=e106] [cursor=pointer]
+          - button "S" [ref=e107] [cursor=pointer]
+      - generic [ref=e108]:
+        - generic [ref=e109]:
+          - generic [ref=e110]: Meditation
+          - button "Edit habit" [ref=e111] [cursor=pointer]: ✏️
+          - button "Delete habit" [ref=e112] [cursor=pointer]: 🗑
+        - generic [ref=e113]:
+          - button "M" [ref=e114] [cursor=pointer]
+          - button "T" [ref=e115] [cursor=pointer]
+          - button "W" [ref=e116] [cursor=pointer]
+          - button "T" [ref=e117] [cursor=pointer]
+          - button "F" [ref=e118] [cursor=pointer]
+          - button "S" [ref=e119] [cursor=pointer]
+          - button "S" [ref=e120] [cursor=pointer]
+      - generic [ref=e121]:
+        - generic [ref=e122]:
+          - generic [ref=e123]: Water Bottles
+          - button "Edit habit" [ref=e124] [cursor=pointer]: ✏️
+          - button "Delete habit" [ref=e125] [cursor=pointer]: 🗑
+        - generic [ref=e126]:
+          - button "M" [ref=e127] [cursor=pointer]
+          - button "T" [ref=e128] [cursor=pointer]
+          - button "5" [ref=e129] [cursor=pointer]
+          - button "T" [ref=e130] [cursor=pointer]
+          - button "F" [ref=e131] [cursor=pointer]
+          - button "S" [ref=e132] [cursor=pointer]
+          - button "S" [ref=e133] [cursor=pointer]
+    - button "+ Add Habit" [ref=e13] [cursor=pointer]

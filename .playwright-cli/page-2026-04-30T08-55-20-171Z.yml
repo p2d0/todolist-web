@@ -1,0 +1,8 @@
+- main [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e7]: 0.0 pomodoros
+      - generic [ref=e8]:
+        - button "S" [ref=e9] [cursor=pointer]
+        - button "Start" [ref=e10] [cursor=pointer]
+    - button "+ Add Habit" [ref=e12] [cursor=pointer]

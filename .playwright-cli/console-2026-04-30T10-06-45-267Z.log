@@ -1,0 +1,20 @@
+[     245ms] [WARNING] The next HMR update will cause the page to reload @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[     245ms] [ERROR] Error @ http://localhost:5173/@fs/mnt/md127/todolist-bun/.svelte-kit/generated/client/app.js:15
+[     246ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[     247ms] [WARNING] <Error> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[     247ms] [WARNING] <Root> was created without expected prop 'form' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[   50074ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[   50074ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[   85991ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[   85992ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  339719ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  351523ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  351523ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  373217ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  373217ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  486685ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  486685ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  610504ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  610504ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  709012ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  709012ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322

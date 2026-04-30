@@ -1,0 +1,34 @@
+[     231ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[     231ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[   91180ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[   91180ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  115015ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  115016ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  130237ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  130237ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  144581ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  144582ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  478013ms] ReferenceError: page is not defined
+    at _promiseAwareJsonValueNoThrow/< (debugger eval code:327:30)
+    at async*_promiseAwareJsonValueNoThrow (debugger eval code:329:9)
+    at evaluate (debugger eval code:310:33)
+    at  (debugger eval code:1:44)
+    at evaluateFunction (chrome://juggler/content/content/Runtime.js:404:60)
+    at callFunction (chrome://juggler/content/content/Runtime.js:103:41)
+    at _onMessageInternal (chrome://juggler/content/SimpleChannel.js:237:37)
+    at _onMessage (chrome://juggler/content/SimpleChannel.js:194:12)
+    at bindToActor/actor.receiveMessage (chrome://juggler/content/SimpleChannel.js:39:44)
+[  492580ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  492580ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  520595ms] ReferenceError: page is not defined
+    at _promiseAwareJsonValueNoThrow/< (debugger eval code:327:30)
+    at async*_promiseAwareJsonValueNoThrow (debugger eval code:329:9)
+    at evaluate (debugger eval code:310:33)
+    at  (debugger eval code:1:44)
+    at evaluateFunction (chrome://juggler/content/content/Runtime.js:404:60)
+    at callFunction (chrome://juggler/content/content/Runtime.js:103:41)
+    at _onMessageInternal (chrome://juggler/content/SimpleChannel.js:237:37)
+    at _onMessage (chrome://juggler/content/SimpleChannel.js:194:12)
+    at bindToActor/actor.receiveMessage (chrome://juggler/content/SimpleChannel.js:39:44)
+[  572377ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  572378ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322

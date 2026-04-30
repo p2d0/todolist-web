@@ -1,0 +1,9 @@
+Total messages: 10 (Errors: 0, Warnings: 4)
+Returning 6 messages for level "info"
+
+[WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[LOG] handleCircleClick 2026-04-30 isToday true type timer @ http://localhost:5173/src/lib/components/HabitRow.svelte?t=1777544553820:524
+[WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[LOG] handleCircleClick 2026-04-30 isToday true type timer @ http://localhost:5173/src/lib/components/HabitRow.svelte?t=1777544553820:524

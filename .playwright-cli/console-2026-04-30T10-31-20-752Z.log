@@ -1,0 +1,18 @@
+[     203ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[     204ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  114725ms] [ERROR] [JavaScript Error: "Loading module from “http://localhost:5173/src/routes/+layout.svelte?t=1777545195466&svelte&type=style&lang.css” was blocked because of a disallowed MIME type (“text/html”)." {file: "http://localhost:5173/" line: 0}] @ http://localhost:5173/:0
+[  114725ms] [ERROR] Error @ http://localhost:5173/@vite/client:173
+[  114725ms] [ERROR] [hmr] Failed to reload /src/routes/+layout.svelte?svelte&type=style&lang.css. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:175
+[  114727ms] [WARNING] [JavaScript Warning: "Loading failed for the module with source “http://localhost:5173/src/routes/+layout.svelte?t=1777545195466&svelte&type=style&lang.css”." {file: "http://localhost:5173/@vite/client" line: 0}] @ http://localhost:5173/@vite/client:0
+[  114733ms] [ERROR] [JavaScript Error: "Loading module from “http://localhost:5173/src/routes/+layout.svelte?t=1777545195466” was blocked because of a disallowed MIME type (“text/html”)." {file: "http://localhost:5173/" line: 0}] @ http://localhost:5173/:0
+[  114733ms] [ERROR] Error @ http://localhost:5173/@vite/client:173
+[  114733ms] [ERROR] [hmr] Failed to reload /src/routes/+layout.svelte. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:175
+[  114734ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  114735ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  114758ms] [WARNING] [JavaScript Warning: "Loading failed for the module with source “http://localhost:5173/src/routes/+layout.svelte?t=1777545195466”." {file: "http://localhost:5173/@vite/client" line: 0}] @ http://localhost:5173/@vite/client:0
+[  115017ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  115018ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  125811ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  125811ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  135166ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  135166ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322

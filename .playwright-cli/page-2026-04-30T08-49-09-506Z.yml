@@ -1,0 +1,21 @@
+- main [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e7]: 0.0 pomodoros
+      - generic [ref=e8]:
+        - button "S" [ref=e9] [cursor=pointer]
+        - button "Start" [ref=e10] [cursor=pointer]
+    - generic [ref=e11]: 0 sessions, 0m total, 0.0 pomodoros
+    - generic [ref=e13]:
+      - generic [ref=e14]:
+        - generic [ref=e15]: Test Habit
+        - button "Edit habit" [ref=e16] [cursor=pointer]: ⋯
+      - generic [ref=e17]:
+        - button "M" [ref=e18] [cursor=pointer]
+        - button "T" [ref=e19] [cursor=pointer]
+        - button "W" [ref=e20] [cursor=pointer]
+        - button "T" [ref=e21] [cursor=pointer]
+        - button "F" [ref=e22] [cursor=pointer]
+        - button "S" [ref=e23] [cursor=pointer]
+        - button "S" [ref=e24] [cursor=pointer]
+    - button "+ Add Habit" [ref=e25] [cursor=pointer]

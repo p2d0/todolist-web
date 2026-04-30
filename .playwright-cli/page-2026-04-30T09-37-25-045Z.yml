@@ -1,0 +1,81 @@
+- main [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e7]: 0.0 pomodoros
+      - generic [ref=e8]:
+        - button "S" [ref=e9] [cursor=pointer]
+        - button "Start" [ref=e10] [cursor=pointer]
+    - generic [ref=e13]: 0 sessions, 0m total, 0.0 pomodoros
+    - generic [ref=e11]:
+      - generic [ref=e14]:
+        - generic [ref=e15]:
+          - generic [ref=e16]: Test Habit
+          - button "Edit habit" [ref=e17] [cursor=pointer]: ⋯
+        - generic [ref=e18]:
+          - button "M" [ref=e19] [cursor=pointer]
+          - button "T" [ref=e20] [cursor=pointer]
+          - button "25m" [ref=e21] [cursor=pointer]
+          - button "T" [ref=e22] [cursor=pointer]
+          - button "25m" [ref=e23] [cursor=pointer]
+          - button "S" [ref=e24] [cursor=pointer]
+          - button "S" [ref=e25] [cursor=pointer]
+      - generic [ref=e26]:
+        - generic [ref=e27]:
+          - generic [ref=e28]: Deep Reading
+          - button "Edit habit" [ref=e29] [cursor=pointer]: ⋯
+        - generic [ref=e30]:
+          - button "M" [ref=e31] [cursor=pointer]
+          - button "T" [ref=e32] [cursor=pointer]
+          - button "W" [ref=e33] [cursor=pointer]
+          - button "T" [ref=e34] [cursor=pointer]
+          - button "F" [ref=e35] [cursor=pointer]
+          - button "S" [ref=e36] [cursor=pointer]
+          - button "S" [ref=e37] [cursor=pointer]
+      - generic [ref=e38]:
+        - generic [ref=e39]:
+          - generic [ref=e40]: Meditation
+          - button "Edit habit" [ref=e41] [cursor=pointer]: ⋯
+        - generic [ref=e42]:
+          - button "M" [ref=e43] [cursor=pointer]
+          - button "T" [ref=e44] [cursor=pointer]
+          - button "W" [ref=e45] [cursor=pointer]
+          - button "T" [ref=e46] [cursor=pointer]
+          - button "F" [ref=e47] [cursor=pointer]
+          - button "S" [ref=e48] [cursor=pointer]
+          - button "S" [ref=e49] [cursor=pointer]
+      - generic [ref=e65]:
+        - generic [ref=e66]:
+          - generic [ref=e67]: Running
+          - button "Edit habit" [ref=e68] [cursor=pointer]: ⋯
+        - generic [ref=e69]:
+          - button "M" [ref=e70] [cursor=pointer]
+          - button "T" [ref=e71] [cursor=pointer]
+          - button "W" [ref=e72] [cursor=pointer]
+          - button "T" [ref=e73] [cursor=pointer]
+          - button "F" [ref=e74] [cursor=pointer]
+          - button "S" [ref=e75] [cursor=pointer]
+          - button "S" [ref=e76] [cursor=pointer]
+    - button "+ Add Habit" [active] [ref=e12] [cursor=pointer]
+    - generic [ref=e78]:
+      - heading "Add Habit" [level=2] [ref=e79]
+      - generic [ref=e80]:
+        - text: Name
+        - textbox "Name" [ref=e81]:
+          - /placeholder: e.g. Exercise, Read, Code...
+      - generic [ref=e82]:
+        - text: Type
+        - combobox "Type" [ref=e83]:
+          - option "Timer (Pomodoro)" [selected]
+          - option "Yes / No"
+          - option "Number"
+      - generic [ref=e84]:
+        - text: Duration (seconds)
+        - spinbutton "Duration (seconds)" [ref=e85]: "1500"
+      - generic [ref=e86]:
+        - text: Mode
+        - combobox "Mode" [ref=e87]:
+          - option "Stopwatch (count up)" [selected]
+          - option "Timed (countdown)"
+      - generic [ref=e88]:
+        - button "Cancel" [ref=e89] [cursor=pointer]
+        - button "Add" [ref=e90] [cursor=pointer]

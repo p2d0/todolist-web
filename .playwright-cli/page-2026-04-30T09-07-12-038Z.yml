@@ -1,0 +1,44 @@
+- main [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e7]: 0.0 pomodoros
+      - generic [ref=e8]:
+        - button "S" [ref=e9] [cursor=pointer]
+        - button "Start" [ref=e10] [cursor=pointer]
+    - generic [ref=e13]: 0 sessions, 0m total, 0.0 pomodoros
+    - generic [ref=e14]:
+      - generic [ref=e15]:
+        - generic [ref=e16]: Test Habit
+        - button "Edit habit" [ref=e17] [cursor=pointer]: ⋯
+      - generic [ref=e18]:
+        - button "M" [ref=e19] [cursor=pointer]
+        - button "T" [ref=e20] [cursor=pointer]
+        - button "W" [ref=e21] [cursor=pointer]
+        - button "T" [ref=e22] [cursor=pointer]
+        - button "F" [ref=e23] [cursor=pointer]
+        - button "S" [ref=e24] [cursor=pointer]
+        - button "S" [ref=e25] [cursor=pointer]
+    - button "+ Add Habit" [active] [ref=e12] [cursor=pointer]
+    - generic [ref=e27]:
+      - heading "Add Habit" [level=2] [ref=e28]
+      - generic [ref=e29]:
+        - text: Name
+        - textbox "Name" [ref=e30]:
+          - /placeholder: e.g. Exercise, Read, Code...
+      - generic [ref=e31]:
+        - text: Type
+        - combobox "Type" [ref=e32]:
+          - option "Timer (Pomodoro)" [selected]
+          - option "Yes / No"
+          - option "Number"
+      - generic [ref=e33]:
+        - text: Duration (seconds)
+        - spinbutton "Duration (seconds)" [ref=e34]: "1500"
+      - generic [ref=e35]:
+        - text: Mode
+        - combobox "Mode" [ref=e36]:
+          - option "Stopwatch (count up)" [selected]
+          - option "Timed (countdown)"
+      - generic [ref=e37]:
+        - button "Cancel" [ref=e38] [cursor=pointer]
+        - button "Add" [ref=e39] [cursor=pointer]

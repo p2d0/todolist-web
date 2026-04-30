@@ -1,0 +1,40 @@
+[     381ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[     382ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 1094071ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 1094071ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 1604707ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 1604708ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 1726211ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 1726212ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 1767404ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 1767404ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 1781329ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 1781330ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 1792975ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 1792975ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 1905726ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 2047096ms] ReferenceError: habits is not defined
+    at refresh (http://localhost:5173/src/lib/components/WeekSummary.svelte?t=1777542988266:145:23)
+    at instance/$$self.$$.update (http://localhost:5173/src/lib/components/WeekSummary.svelte?t=1777542988266:194:41)
+    at init (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:2147:6)
+    at WeekSummary (http://localhost:5173/src/lib/components/WeekSummary.svelte?t=1777542988266:205:7)
+    at createComponent (http://localhost:5173/node_modules/svelte-hmr/runtime/svelte-hooks.js?v=5917aa74:206:20)
+    at createProxiedComponent/instrument/targetCmp.$replace (http://localhost:5173/node_modules/svelte-hmr/runtime/svelte-hooks.js?v=5917aa74:269:15)
+    at refreshComponent (http://localhost:5173/node_modules/svelte-hmr/runtime/proxy.js?v=5917aa74:171:15)
+    at rerender (http://localhost:5173/node_modules/svelte-hmr/runtime/proxy-adapter-dom.js?v=5917aa74:77:21)
+    at createProxy/reload/< (http://localhost:5173/node_modules/svelte-hmr/runtime/proxy.js?v=5917aa74:408:9)
+    at reload (http://localhost:5173/node_modules/svelte-hmr/runtime/proxy.js?v=5917aa74:406:15)
+    at applyHmr/< (http://localhost:5173/node_modules/svelte-hmr/runtime/hot-api.js?v=5917aa74:150:31)
+    at accept/< (http://localhost:5173/@vite/client:34:58)
+    at fetchUpdate/< (http://localhost:5173/@vite/client:218:11)
+    at queueUpdate/< (http://localhost:5173/@vite/client:193:58)
+    at queueUpdate (http://localhost:5173/@vite/client:193:36)
+    at async*handleMessage/< (http://localhost:5173/@vite/client:642:30)
+    at handleMessage (http://localhost:5173/@vite/client:640:25)
+    at setupWebSocket/< (http://localhost:5173/@vite/client:550:18)
+    at EventListener.handleEvent*setupWebSocket (http://localhost:5173/@vite/client:549:11)
+    at  (http://localhost:5173/@vite/client:531:12)
+[ 2093392ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 2093392ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 2182295ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 2182295ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322

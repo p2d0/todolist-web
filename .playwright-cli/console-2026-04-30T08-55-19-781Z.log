@@ -1,0 +1,54 @@
+[     408ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[     409ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[     409ms] [WARNING] <HabitList> was created without expected prop 'onAdd' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  445126ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  445126ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  445128ms] [WARNING] <HabitList> was created without expected prop 'onAdd' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  693144ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  833087ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[  849888ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 1173490ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 1173490ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 1356374ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 1356374ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 1369334ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 1369335ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 3388810ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 3388811ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 3402753ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 3402754ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 3527158ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 3668529ms] ReferenceError: habits is not defined
+    at refresh (http://localhost:5173/src/lib/components/WeekSummary.svelte?t=1777542988266:145:23)
+    at instance/$$self.$$.update (http://localhost:5173/src/lib/components/WeekSummary.svelte?t=1777542988266:194:41)
+    at init (http://localhost:5173/node_modules/.vite/deps/chunk-LBLMGS3B.js?v=5917aa74:2147:6)
+    at WeekSummary (http://localhost:5173/src/lib/components/WeekSummary.svelte?t=1777542988266:205:7)
+    at createComponent (http://localhost:5173/node_modules/svelte-hmr/runtime/svelte-hooks.js?v=5917aa74:206:20)
+    at createProxiedComponent/instrument/targetCmp.$replace (http://localhost:5173/node_modules/svelte-hmr/runtime/svelte-hooks.js?v=5917aa74:269:15)
+    at refreshComponent (http://localhost:5173/node_modules/svelte-hmr/runtime/proxy.js?v=5917aa74:171:15)
+    at rerender (http://localhost:5173/node_modules/svelte-hmr/runtime/proxy-adapter-dom.js?v=5917aa74:77:21)
+    at createProxy/reload/< (http://localhost:5173/node_modules/svelte-hmr/runtime/proxy.js?v=5917aa74:408:9)
+    at reload (http://localhost:5173/node_modules/svelte-hmr/runtime/proxy.js?v=5917aa74:406:15)
+    at applyHmr/< (http://localhost:5173/node_modules/svelte-hmr/runtime/hot-api.js?v=5917aa74:150:31)
+    at accept/< (http://localhost:5173/@vite/client:34:58)
+    at fetchUpdate/< (http://localhost:5173/@vite/client:218:11)
+    at queueUpdate/< (http://localhost:5173/@vite/client:193:58)
+    at queueUpdate (http://localhost:5173/@vite/client:193:36)
+    at async*handleMessage/< (http://localhost:5173/@vite/client:642:30)
+    at handleMessage (http://localhost:5173/@vite/client:640:25)
+    at setupWebSocket/< (http://localhost:5173/@vite/client:550:18)
+    at EventListener.handleEvent*setupWebSocket (http://localhost:5173/@vite/client:549:11)
+    at  (http://localhost:5173/@vite/client:531:12)
+[ 4084505ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 4207982ms] [ERROR] Error @ http://localhost:5173/@vite/client:173
+[ 4207983ms] [ERROR] [hmr] Failed to reload /src/lib/components/HabitRow.svelte. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:175
+[ 4236597ms] [ERROR] Error @ http://localhost:5173/@vite/client:173
+[ 4236597ms] [ERROR] [hmr] Failed to reload /src/lib/components/HabitRow.svelte. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:175
+[ 4258931ms] [ERROR] Error @ http://localhost:5173/@vite/client:173
+[ 4258931ms] [ERROR] [hmr] Failed to reload /src/lib/components/HabitRow.svelte. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:175
+[ 4270009ms] [ERROR] Error @ http://localhost:5173/@vite/client:173
+[ 4270010ms] [ERROR] [hmr] Failed to reload /src/lib/components/HabitRow.svelte. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:175
+[ 4625204ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 4637001ms] [WARNING] <Layout> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 4637002ms] [WARNING] <Page> was created with unknown prop 'params' @ http://localhost:5173/node_modules/@sveltejs/kit/src/runtime/client/client.js?v=5917aa74:3322
+[ 4646104ms] [WARNING] [JavaScript Warning: "“localhost” has been classified as a bounce tracker. If it does not receive user activation within the next 3,600 seconds it will have its state purged."] @ :0
