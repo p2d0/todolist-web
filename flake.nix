@@ -58,8 +58,8 @@
             };
             host = lib.mkOption {
               type = lib.types.str;
-              default = "127.0.0.1";
-              description = "Bind address (127.0.0.1 for nginx proxy)";
+              default = "0.0.0.0";
+              description = "Bind address (0.0.0.0 for all interfaces)";
             };
             dataDir = lib.mkOption {
               type = lib.types.path;
