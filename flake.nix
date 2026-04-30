@@ -15,10 +15,13 @@
           version = "0.1.0";
           src = ./.;
           npmDepsHash = "sha256-O4somChwMU7OzTPni3jPWeWahuPKeW1TymVW7sr0gNc=";
-          nativeBuildInputs = [ pkgs.python3 ];
+          nativeBuildInputs = [ pkgs.python3 pkgs.node-gyp pkgs.pkg-config ];
           buildInputs = [ pkgs.sqlite ];
           dontNpmBuild = false;
           npmBuildScript = "build";
+          # Force better-sqlite3 to compile from source against the exact Node.js version
+          # instead of downloading a prebuilt binary that may be ABI-incompatible
+          npmRebuildFlags = [ "--build-from-source" ];
           installPhase = ''
             mkdir -p $out/lib/node_modules/pomotasker-web
             cp -r package.json build node_modules $out/lib/node_modules/pomotasker-web/
