@@ -38,6 +38,12 @@
         };
       });
 
+      devShells = forEachSystem (pkgs: {
+        default = pkgs.mkShell {
+          buildInputs = [ pkgs.git-filter-repo pkgs.nodejs_22 ];
+        };
+      });
+
       nixosModules.pomotasker = { config, lib, pkgs, ... }:
         let
           pkg = self.packages.${pkgs.system}.default;
