@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# SvelteKit build output
+build/
+.svelte-kit/
+
+# SQLite transient files
+data/*.db-wal
+data/*.db-shm
+
+# Nix build result
+result
+
+# Old self-signed certs (no longer used)
+server.crt
+server.key
+
+# Playwright CLI artifacts
+.playwright-cli/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Pi Lens cache
+.pi-lens/
+
+# Generated service worker copy
+static/sw/

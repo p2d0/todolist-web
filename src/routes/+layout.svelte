@@ -1,6 +1,6 @@
 <script>
   if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/src/sw/service-worker.js');
+    navigator.serviceWorker.register('/sw/service-worker.js');
   }
 </script>
 

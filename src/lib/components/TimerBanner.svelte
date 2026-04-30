@@ -4,7 +4,6 @@
   import dayjs from 'dayjs';
   import { onMount } from 'svelte';
 
-
   let activeTimer = null;
   let habits = [];
   let displayText = '0.0 pomodoros';
@@ -12,57 +11,56 @@
   let modeBtnText = 'S';
 
   let timerInterval = null;
-  let notifInterval = null;
 
   // Notification
   let notifPermission = 'default';
 
   function requestNotifPermission() {
     if (typeof Notification === 'undefined') return;
-    if (Notification.permission === 'granted') {
-      notifPermission = 'granted';
-      startNotifUpdater();
-    } else if (Notification.permission === 'default') {
+    if (Notification.permission === 'default') {
       Notification.requestPermission().then(perm => {
         notifPermission = perm;
-        if (perm === 'granted' && activeTimer?.running) {
-          startNotifUpdater();
-        }
       });
     }
   }
 
-  function startNotifUpdater() {
-    if (notifInterval) return;
-    notifInterval = setInterval(updateNotif, 1000);
-    updateNotif();
-  }
-
-  function updateNotif() {
-    if (notifPermission !== 'granted' || !activeTimer?.running) return;
-    const habit = habits.find(h => h.id === activeTimer.activeHabitId);
-    if (!habit) return;
-    const elapsed = getElapsed();
-    let timeStr;
-    if (activeTimer.mode === 'timed') {
-      const remaining = Math.max(0, 1500 - elapsed);
-      const mins = Math.floor(remaining / 60);
-      const secs = remaining % 60;
-      timeStr = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')} left`;
-    } else {
-      const mins = Math.floor(elapsed / 60);
-      const secs = elapsed % 60;
-      timeStr = `${mins}m ${secs}s elapsed`;
-    }
-    navigator.serviceWorker.ready.then(reg => {
-      reg.showNotification('PomoTasker', {
-        tag: 'timer',
-        body: `${habit.description} — ${timeStr}`,
+  function showStartNotif(habit) {
+    if (Notification.permission !== 'granted') return;
+    const mode = activeTimer?.mode || habit.mode || 'stopwatch';
+    const body = `Timer started: ${habit.description} (${mode} mode)`;
+    try {
+      const n = new Notification('PomoTasker', {
+        body,
         icon: '/icons/icon-192.png',
+        tag: 'timer-start',
+        requireInteraction: true,
+        actions: [{ action: 'stop', title: 'Stop Timer' }],
       });
-    });
+      n.addEventListener('click', () => {
+        window.focus();
+        stopTimer();
+      });
+    } catch (err) {
+      console.error('Notification error:', err);
+    }
   }
 
+  function showStopNotif(habit, elapsed) {
+    if (Notification.permission !== 'granted') return;
+    const mins = Math.floor(elapsed / 60);
+    const secs = elapsed % 60;
+    const body = `Timer stopped: ${habit.description} (${mins}m ${secs}s)`;
+    try {
+      new Notification('PomoTasker', {
+        body,
+        icon: '/icons/icon-192.png',
+        tag: 'timer-stop',
+        requireInteraction: true,
+      });
+    } catch (err) {
+      console.error('Notification error:', err);
+    }
+  }
 
   const tUnsub = timerStore.subscribe(v => {
     activeTimer = v;
@@ -78,6 +76,9 @@
 
   onMount(() => {
     timerInterval = setInterval(updateDisplay, 250);
+    if (typeof Notification !== 'undefined') {
+      notifPermission = Notification.permission;
+    }
     return () => {
       clearInterval(timerInterval);
       tUnsub();
@@ -146,6 +147,7 @@
       startTime: Date.now(),
       elapsedBefore: 0,
     }));
+    showStartNotif(habit);
   }
 
   function stopTimer() {
@@ -155,6 +157,7 @@
     const date = dayjs().format('YYYY-MM-DD');
 
     if (habit) {
+      showStopNotif(habit, elapsed);
       fetch('/api/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -174,11 +177,6 @@
       elapsedBefore: 0,
       elapsed: 0,
     }));
-
-    if (notifInterval) {
-      clearInterval(notifInterval);
-      notifInterval = null;
-    }
   }
 
   function toggleMode() {
@@ -189,17 +187,22 @@
   }
 
   async function onPomodoroComplete() {
-    if (notifPermission === 'granted') {
-      navigator.serviceWorker.ready.then(reg => {
-      reg.showNotification('Pomodoro complete!', {
-        tag: 'complete',
-        icon: '/icons/icon-192.png',
-      });
-    });
+    if (Notification.permission === 'granted') {
+      try {
+        new Notification('Pomodoro complete!', {
+          body: 'Pomodoro session finished!',
+          icon: '/icons/icon-192.png',
+          requireInteraction: true,
+          tag: 'pomodoro-done',
+        });
+      } catch (err) {
+        console.error('Notification error:', err);
+      }
     }
     await stopTimer();
   }
 
+  $: notifIcon = notifPermission === 'granted' ? '🔔' : notifPermission === 'denied' ? '🔕' : '🔔?';
   $: isActive = activeTimer?.running;
   $: activeHabitName = activeTimer?.activeHabitId
     ? habits.find(h => h.id === activeTimer.activeHabitId)?.description || ''
@@ -215,6 +218,7 @@
   </div>
   <div class="timer-controls">
     <button class="mode-btn" on:click={toggleMode}>{modeBtnText}</button>
+    <button class="notif-btn" on:click={requestNotifPermission} title="Enable notifications">{notifIcon}</button>
     <button class="action-btn" class:active={isActive} on:click={handleStartStop}>{btnText}</button>
   </div>
 </div>
@@ -269,6 +273,19 @@
   }
 
   .mode-btn:hover {
+    background: #454a60;
+  }
+
+  .notif-btn {
+    background: #363a4f;
+    border: 1px solid #454a60;
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .notif-btn:hover {
     background: #454a60;
   }
 
