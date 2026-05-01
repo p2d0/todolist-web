@@ -5,7 +5,7 @@ const config = {
   kit: {
     adapter: adapter(),
     paths: {
-      base: '/pomotask',
+      base: 'POMO_BASE' in process.env ? process.env.POMO_BASE : '/pomotask',
     },
     alias: {
       $lib: 'src/lib',
