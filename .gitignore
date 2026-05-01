@@ -30,5 +30,5 @@ server.key
 # Pi Lens cache
 .pi-lens/
 
-# Generated service worker copy
-static/sw/
+# Generated build
+static/build/

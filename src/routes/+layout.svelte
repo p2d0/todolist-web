@@ -4,7 +4,7 @@
   import { onMount } from 'svelte';
 
   if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-    navigator.serviceWorker.register(`${base}/service-worker.js`).then(() => {
+    navigator.serviceWorker.register(`${base}/sw/service-worker.js`).then(() => {
       if (navigator.serviceWorker.controller) return;
       return new Promise(resolve => {
         navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true });
