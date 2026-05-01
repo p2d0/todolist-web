@@ -3,6 +3,8 @@
   import { onMount } from 'svelte';
   import dayjs from 'dayjs';
   import { timerStore } from '$lib/stores/timer.js';
+  import { send } from '$lib/stores/sync.js';
+  import { get } from 'svelte/store';
   import TimeEditor from './TimeEditor.svelte';
   import NumberEditor from './NumberEditor.svelte';
 
@@ -117,6 +119,7 @@
       startTime: Date.now(),
       elapsedBefore: 0,
     }));
+    send({ type: 'timer:update', data: get(timerStore) });
   }
 
   async function stopTimer(habit) {
@@ -132,6 +135,7 @@
         durationSeconds: elapsed,
       }),
     });
+    send({ type: 'sessions:update' });
 
     timerStore.update(v => ({
       ...v,
@@ -141,6 +145,7 @@
       elapsedBefore: 0,
       elapsed: 0,
     }));
+    send({ type: 'timer:update', data: get(timerStore) });
 
     updateCircleData();
   }
@@ -177,6 +182,7 @@
         body: JSON.stringify({ habitId, date, value: 1 }),
       });
     }
+    send({ type: 'sessions:update' });
 
     updateCircleData();
   }

@@ -1,6 +1,8 @@
 <script>
   import { base } from '$app/paths';
   import { timerStore } from '$lib/stores/timer.js';
+  import { send } from '$lib/stores/sync.js';
+  import { get } from 'svelte/store';
   export let habitsStore;
   import dayjs from 'dayjs';
   import { onMount } from 'svelte';
@@ -148,6 +150,7 @@
       startTime: Date.now(),
       elapsedBefore: 0,
     }));
+    send({ type: 'timer:update', data: get(timerStore) });
     showStartNotif(habit);
   }
 
@@ -178,6 +181,7 @@
       elapsedBefore: 0,
       elapsed: 0,
     }));
+    send({ type: 'timer:update', data: get(timerStore) });
   }
 
   function toggleMode() {
@@ -185,6 +189,7 @@
       ...v,
       mode: v.mode === 'timed' ? 'stopwatch' : 'timed',
     }));
+    send({ type: 'timer:update', data: get(timerStore) });
   }
 
   async function onPomodoroComplete() {

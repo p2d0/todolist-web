@@ -17,10 +17,15 @@
         refresh();
       }
     };
+    const handleSync = () => refresh();
     document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('sync:habits', handleSync);
+    window.addEventListener('sync:sessions', handleSync);
     return () => {
       unsub();
       document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('sync:habits', handleSync);
+      window.removeEventListener('sync:sessions', handleSync);
     };
   });
 

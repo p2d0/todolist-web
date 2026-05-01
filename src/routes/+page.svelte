@@ -6,6 +6,7 @@
   import AddHabitDialog from '$lib/components/AddHabitDialog.svelte';
   import { base } from '$app/paths';
   import { habitsStore } from '$lib/stores/timer.js';
+  import { send } from '$lib/stores/sync.js';
 
   let showAddDialog = false;
   let editingHabit = null;
@@ -22,10 +23,16 @@
   }
 
   async function afterDeleteHabit() {
+    send({ type: 'habits:update' });
     await loadHabits();
   }
 
-  onMount(loadHabits);
+  onMount(() => {
+    loadHabits();
+    const onHabitsSync = () => loadHabits();
+    window.addEventListener('sync:habits', onHabitsSync);
+    return () => window.removeEventListener('sync:habits', onHabitsSync);
+  });
 </script>
 
 <div class="app-container">

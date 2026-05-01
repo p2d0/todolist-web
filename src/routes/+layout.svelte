@@ -1,9 +1,15 @@
 <script>
   import { base } from '$app/paths';
+  import { initSync } from '$lib/stores/sync.js';
+  import { onMount } from 'svelte';
 
   if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
     navigator.serviceWorker.register(`${base}/service-worker.js`);
   }
+
+  onMount(() => {
+    initSync();
+  });
 </script>
 
 <svelte:head>

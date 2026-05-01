@@ -2,6 +2,7 @@
 
 
   import { base } from '$app/paths';
+  import { onMount } from 'svelte';
 
   export let habitsStore;
 
@@ -25,6 +26,14 @@
     const pomos = totalSeconds / 1500;
     summary = `${totalSessions} sessions, ${Math.floor(totalSeconds / 60)}m total, ${pomos.toFixed(1)} pomodoros`;
   }
+
+  onMount(() => {
+    const handleSync = () => {
+      if ($habitsStore.length > 0) refresh($habitsStore);
+    };
+    window.addEventListener('sync:sessions', handleSync);
+    return () => window.removeEventListener('sync:sessions', handleSync);
+  });
 </script>
 
 {#if summary}

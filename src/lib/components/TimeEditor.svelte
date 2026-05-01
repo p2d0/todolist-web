@@ -1,5 +1,6 @@
 <script>
   import { base } from '$app/paths';
+  import { send } from '$lib/stores/sync.js';
 
   export let habitId;
   export let date;
@@ -24,6 +25,7 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ habitId, date, durationSeconds: total }),
     });
+    send({ type: 'sessions:update' });
 
     onSaved();
     onClosed();
@@ -31,6 +33,7 @@
 
   async function remove() {
     await fetch(`${base}/api/sessions?date=${date}&habitId=${habitId}`, { method: 'DELETE' });
+    send({ type: 'sessions:update' });
     onSaved();
     onClosed();
   }

@@ -1,5 +1,6 @@
 <script>
   import { base } from '$app/paths';
+  import { send } from '$lib/stores/sync.js';
   import { createEventDispatcher } from 'svelte';
 
   const dispatch = createEventDispatcher();
@@ -29,6 +30,7 @@
     });
 
     if (res.ok) {
+      send({ type: 'habits:update' });
       dispatch('added');
     }
   }

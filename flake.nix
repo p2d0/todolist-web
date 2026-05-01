@@ -26,6 +26,7 @@
           installPhase = ''
             mkdir -p $out/lib/node_modules/pomotasker-web
             cp -r package.json build node_modules $out/lib/node_modules/pomotasker-web/
+            cp server.js ws-server.js $out/lib/node_modules/pomotasker-web/
           '';
         };
     in {
@@ -37,7 +38,7 @@
           program = "${pkgs.writeShellScript "pomotasker" ''
             exec ${pkgs.nodejs_22}/bin/node ${
               (app pkgs)
-            }/lib/node_modules/pomotasker-web/build/index.js
+            }/lib/node_modules/pomotasker-web/server.js
           ''}";
         };
       });
@@ -84,7 +85,7 @@
               after = [ "network.target" ];
               serviceConfig = {
                 Type = "simple";
-                ExecStart = "${pkgs.nodejs_22}/bin/node ${base}/build/index.js";
+                ExecStart = "${pkgs.nodejs_22}/bin/node ${base}/server.js";
                 WorkingDirectory = config.pomotasker.dataDir;
                 StateDirectory = "pomotasker";
                 User = "pomotasker";
@@ -94,6 +95,7 @@
                 Environment = [
                   "PORT=${toString config.pomotasker.port}"
                   "HOST=${config.pomotasker.host}"
+                  "BASE_PATH=/pomotask"
                   "NODE_PATH=${base}/node_modules"
                 ];
               };
