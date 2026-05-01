@@ -37,9 +37,9 @@
   function intensityColor(level) {
     switch (level) {
       case 0: return '#2a2e3f';
-      case 1: return '#2d4a3e';
-      case 2: return '#3d7a4e';
-      case 3: return '#5da85e';
+      case 1: return '#1e4d2b';
+      case 2: return '#2d8a3e';
+      case 3: return '#4dbf5e';
       case 4: return '#a6e3a1';
       default: return '#2a2e3f';
     }
@@ -50,23 +50,33 @@
     const year = parseInt(stats.month.split('-')[0]);
     const month = parseInt(stats.month.split('-')[1]) - 1;
     const firstDay = new Date(year, month, 1);
-    let dayOfWeek = firstDay.getDay(); // 0 = Sun
-    dayOfWeek = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Convert to Mon=0
+    let startOffset = firstDay.getDay(); // 0 = Sun
+    startOffset = startOffset === 0 ? 6 : startOffset - 1; // Convert to Mon=0
 
-    let currentWeek = new Array(7).fill(null);
-    for (let i = 0; i < dayOfWeek; i++) {
-      currentWeek[i] = null;
+    let currentWeek = [];
+    // Leading empty days
+    for (let i = 0; i < startOffset; i++) {
+      currentWeek.push(null);
     }
 
     for (let day = 1; day <= daily.length; day++) {
-      const idx = (dayOfWeek + day - 1) % 7;
-      currentWeek[idx] = { day, value: daily[day - 1] };
-      if (idx === 6 || day === daily.length) {
-        grid.push([...currentWeek]);
-        currentWeek = new Array(7).fill(null);
+      currentWeek.push({ day, value: daily[day - 1] });
+      if (currentWeek.length === 7 || day === daily.length) {
+        // Pad trailing empty days
+        while (currentWeek.length < 7) {
+          currentWeek.push(null);
+        }
+        grid.push(currentWeek);
+        currentWeek = [];
       }
     }
     return grid;
+  }
+
+  function getWeekLabel(week, month) {
+    const firstCell = week.find(c => c !== null);
+    if (!firstCell) return '';
+    return `${month}-${String(firstCell.day).padStart(2, '0')}`;
   }
 </script>
 
@@ -115,29 +125,41 @@
           </div>
 
           <!-- GitHub-style contribution calendar -->
-          <div class="calendar-wrapper">
-            <div class="calendar-body">
-              <div class="day-labels">
-                {#each dayLabels as label}
-                  <div class="day-label">{label[0]}</div>
-                {/each}
-              </div>
-              {#each grid as week}
-                <div class="week-col">
-                  {#each week as cell}
+          <div class="calendar">
+            <!-- Week day labels on the left -->
+            <div class="calendar-labels">
+              {#each dayLabels as label, i}
+                <div class="cal-label" class:dim={i % 2 !== 0}>{label[0]}</div>
+              {/each}
+            </div>
+
+            <!-- Grid: rows = days, cols = weeks -->
+            <div class="calendar-grid">
+              {#each grid as week, wk}
+                <div class="week-column">
+                  {#each week as cell, dayIdx}
                     {#if cell}
                       <div
-                        class="calendar-cell"
+                        class="cal-cell"
                         style="background: {intensityColor(getIntensity(cell.value, maxValue))}"
                         title="{stats.month}-{String(cell.day).padStart(2, '0')}: {cell.value}"
                       ></div>
                     {:else}
-                      <div class="calendar-cell empty"></div>
+                      <div class="cal-cell empty"></div>
                     {/if}
                   {/each}
                 </div>
               {/each}
             </div>
+          </div>
+
+          <!-- Legend -->
+          <div class="legend">
+            <span class="legend-label">Less</span>
+            {#each [0, 1, 2, 3, 4] as lvl}
+              <div class="legend-box" style="background: {intensityColor(lvl)}"></div>
+            {/each}
+            <span class="legend-label">More</span>
           </div>
         </div>
       {/each}
@@ -272,49 +294,80 @@
     color: #fab387;
   }
 
-  .calendar-wrapper {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .calendar-body {
+  /* Calendar layout */
+  .calendar {
     display: flex;
-    gap: 3px;
-    padding: 4px 0;
+    gap: 6px;
+    align-items: flex-start;
+    margin-top: 8px;
   }
 
-  .day-labels {
+  .calendar-labels {
     display: flex;
     flex-direction: column;
-    gap: 3px;
-    margin-right: 4px;
+    gap: 4px;
     padding-top: 0;
   }
 
-  .day-label {
-    font-size: 9px;
-    color: #6c7086;
-    width: 14px;
-    height: 12px;
-    line-height: 12px;
-    text-align: center;
+  .cal-label {
+    font-size: 10px;
+    color: #a6adc8;
+    width: 20px;
+    height: 16px;
+    line-height: 16px;
+    text-align: right;
     flex-shrink: 0;
   }
 
-  .week-col {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
+  .cal-label.dim {
+    color: #454a60;
   }
 
-  .calendar-cell {
+  .calendar-grid {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    flex: 1;
+  }
+
+  .week-column {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+  }
+
+  .cal-cell {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 3px;
+    min-height: 16px;
+    min-width: 16px;
+    transition: transform 100ms;
+  }
+
+  .cal-cell.empty {
+    background: #2a2e3f;
+    opacity: 0.4;
+  }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    margin-top: 10px;
+  }
+
+  .legend-label {
+    font-size: 10px;
+    color: #6c7086;
+  }
+
+  .legend-box {
     width: 12px;
     height: 12px;
     border-radius: 2px;
-    flex-shrink: 0;
-  }
-
-  .calendar-cell.empty {
-    background: transparent;
   }
 </style>
