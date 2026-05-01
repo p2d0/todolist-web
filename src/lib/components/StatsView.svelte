@@ -6,6 +6,7 @@
   let loading = true;
 
   const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const dayLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
   $: monthLabel = stats ? `${monthNames[parseInt(stats.month.split('-')[1]) - 1]} ${stats.month.split('-')[0]}` : '';
 
@@ -24,14 +25,48 @@
     return String(habit.total);
   }
 
-  function barHeight(value, max) {
-    if (!max) return '4px';
-    const pct = (value / max) * 100;
-    return `${Math.max(4, pct)}%`;
+  function getIntensity(value, max) {
+    if (!max || value <= 0) return 0;
+    const pct = value / max;
+    if (pct > 0.75) return 4;
+    if (pct > 0.5) return 3;
+    if (pct > 0.25) return 2;
+    return 1;
   }
 
-  function barColor(value) {
-    return value > 0 ? '#a6e3a1' : '#454a60';
+  function intensityColor(level) {
+    switch (level) {
+      case 0: return '#2a2e3f';
+      case 1: return '#2d4a3e';
+      case 2: return '#3d7a4e';
+      case 3: return '#5da85e';
+      case 4: return '#a6e3a1';
+      default: return '#2a2e3f';
+    }
+  }
+
+  function buildCalendarGrid(daily) {
+    const grid = [];
+    const year = parseInt(stats.month.split('-')[0]);
+    const month = parseInt(stats.month.split('-')[1]) - 1;
+    const firstDay = new Date(year, month, 1);
+    let dayOfWeek = firstDay.getDay(); // 0 = Sun
+    dayOfWeek = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Convert to Mon=0
+
+    let currentWeek = new Array(7).fill(null);
+    for (let i = 0; i < dayOfWeek; i++) {
+      currentWeek[i] = null;
+    }
+
+    for (let day = 1; day <= daily.length; day++) {
+      const idx = (dayOfWeek + day - 1) % 7;
+      currentWeek[idx] = { day, value: daily[day - 1] };
+      if (idx === 6 || day === daily.length) {
+        grid.push([...currentWeek]);
+        currentWeek = new Array(7).fill(null);
+      }
+    }
+    return grid;
   }
 </script>
 
@@ -60,9 +95,11 @@
       </div>
     </div>
 
-    <!-- Per-habit cards -->
+    <!-- Per-habit GitHub-style calendars -->
     <div class="habit-stats-list">
       {#each stats.habits as habit}
+        {@const grid = buildCalendarGrid(habit.daily)}
+        {@const maxValue = Math.max(...habit.daily.filter(v => v > 0), 1)}
         <div class="habit-stat-card">
           <div class="habit-stat-header">
             <div class="habit-stat-info">
@@ -77,16 +114,25 @@
             </div>
           </div>
 
-          <!-- 30-day bar chart -->
-          <div class="bar-chart">
-            {#each habit.daily as day, i}
-              <div class="bar-wrapper" title="Day {i + 1}: {day}">
-                <div
-                  class="bar"
-                  style="height: {barHeight(day, Math.max(...habit.daily, 1))}; background: {barColor(day)};"
-                ></div>
-              </div>
-            {/each}
+          <!-- GitHub-style contribution calendar -->
+          <div class="calendar-wrapper">
+            <div class="calendar-grid">
+              {#each dayLabels as label, i}
+                <div class="day-label">{label[0]}</div>
+                {#each grid as week}
+                  {@const cell = week[i]}
+                  {#if cell}
+                    <div
+                      class="calendar-cell"
+                      style="background: {intensityColor(getIntensity(cell.value, maxValue))}"
+                      title="{stats.month}-{String(cell.day).padStart(2, '0')}: {cell.value}"
+                    ></div>
+                  {:else}
+                    <div class="calendar-cell empty"></div>
+                  {/if}
+                {/each}
+              {/each}
+            </div>
           </div>
         </div>
       {/each}
@@ -159,7 +205,7 @@
   .habit-stats-list {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
   }
 
   .habit-stat-card {
@@ -221,26 +267,38 @@
     color: #fab387;
   }
 
-  .bar-chart {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    height: 40px;
-    gap: 2px;
+  .calendar-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
-  .bar-wrapper {
-    flex: 1;
-    height: 100%;
-    display: flex;
-    align-items: flex-end;
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: 24px repeat(auto-fit, minmax(0, 1fr));
+    grid-auto-flow: column;
+    gap: 3px;
     min-width: 0;
   }
 
-  .bar {
-    width: 100%;
-    border-radius: 2px 2px 0 0;
-    min-height: 4px;
-    transition: background 150ms;
+  .day-label {
+    font-size: 10px;
+    color: #6c7086;
+    text-align: center;
+    line-height: 12px;
+    height: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .calendar-cell {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    min-width: 12px;
+  }
+
+  .calendar-cell.empty {
+    background: transparent;
   }
 </style>

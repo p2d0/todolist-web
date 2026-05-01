@@ -72,7 +72,7 @@
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.6);
-    z-index: 99;
+    z-index: 200;
   }
 
   .dialog {
@@ -87,7 +87,8 @@
     border-bottom: none;
     border-radius: 16px 16px 0 0;
     padding: 20px;
-    z-index: 100;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    z-index: 201;
   }
 
   h2 {
