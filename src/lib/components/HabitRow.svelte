@@ -329,8 +329,9 @@
   }
 
   .circle-partial {
-    background: #f9e2af;
-    color: #1e1e2e;
+    background: #1e1e2e;
+    color: #f9e2af;
+    border: 2px solid #f9e2af;
   }
 
   .circle-active {
