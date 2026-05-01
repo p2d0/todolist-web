@@ -123,30 +123,8 @@
   }
 
   async function stopTimer(habit) {
-    const elapsed = getElapsed();
-    const date = dayjs().format('YYYY-MM-DD');
-
-    await fetch(`${base}/api/sessions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        habitId: habit.id,
-        date,
-        durationSeconds: elapsed,
-      }),
-    });
+    await timerStore.stop();
     send({ type: 'sessions:update' });
-
-    timerStore.update(v => ({
-      ...v,
-      activeHabitId: null,
-      running: false,
-      startTime: null,
-      elapsedBefore: 0,
-      elapsed: 0,
-    }));
-    send({ type: 'timer:update', data: get(timerStore) });
-
     updateCircleData();
   }
 
