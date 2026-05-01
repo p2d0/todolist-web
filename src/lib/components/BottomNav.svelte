@@ -1,5 +1,6 @@
 <script>
   export let activeTab = 'main';
+  export let showFab = true;
 
   function setTab(tab) {
     activeTab = tab;
@@ -19,6 +20,12 @@
     </svg>
     <span class="nav-label">Main</span>
   </button>
+
+  <div class="fab-slot">
+    {#if showFab}
+      <slot name="fab"></slot>
+    {/if}
+  </div>
 
   <button
     class="nav-item"
@@ -83,5 +90,14 @@
   .nav-label {
     font-size: 11px;
     font-weight: 500;
+  }
+
+  .fab-slot {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    width: 56px;
+    flex-shrink: 0;
   }
 </style>

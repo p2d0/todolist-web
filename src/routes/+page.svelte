@@ -53,11 +53,11 @@
   {/if}
 </div>
 
-{#if activeTab === 'main'}
-  <FabButton onClick={() => { editingHabit = null; showAddDialog = true; }} />
-{/if}
-
-<BottomNav bind:activeTab />
+<BottomNav bind:activeTab showFab={activeTab === 'main'}>
+  <svelte:fragment slot="fab">
+    <FabButton onClick={() => { editingHabit = null; showAddDialog = true; }} />
+  </svelte:fragment>
+</BottomNav>
 
 <style>
   .app-container {
