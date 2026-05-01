@@ -19,6 +19,8 @@
   let showNumberEditor = false;
   let editingNumber = null;
   let tick = 0;
+  let longPressTimer = null;
+  let wasLongPress = false;
 
   const unsub = timerStore.subscribe(v => activeTimer = v);
   const weekDataUnsub = weekDataStore.subscribe(() => updateCircleData());
@@ -107,11 +109,29 @@
     return { label: '', state: 'empty' };
   }
 
+  function startLongPress(circle) {
+    longPressTimer = setTimeout(async () => {
+      wasLongPress = true;
+      if (circle.isToday) {
+        const res = await fetch(`${base}/api/sessions?type=seconds&habitId=${habit.id}&date=${circle.date}`);
+        const data = await res.json();
+        editingCircle = { ...circle, durationSeconds: data.durationSeconds };
+        showTimeEditor = true;
+      }
+    }, 600);
+  }
+
+  function cancelLongPress() {
+    clearTimeout(longPressTimer);
+    longPressTimer = null;
+  }
+
   function isCircleActive(circle) {
     return activeTimer && activeTimer.activeHabitId === habit.id && activeTimer.running && circle.isToday && habit.habit_type === 'timer';
   }
 
   async function handleCircleClick(circle) {
+    if (wasLongPress) { wasLongPress = false; return; }
     if (habit.habit_type === 'timer') {
       if (circle.isToday) {
         // Start/stop timer
@@ -244,6 +264,13 @@
         class="circle {circle.state ? 'circle-' + circle.state : ''} {circle.isToday ? 'circle-today' : ''}"
         class:circle-active={isCircleActive(circle)}
         on:click={() => handleCircleClick(circle)}
+        on:contextmenu={(e) => { if (habit.habit_type === 'timer' && circle.isToday) { e.preventDefault(); openTimeEditor(circle); } }}
+        on:mousedown={() => { if (habit.habit_type === 'timer' && circle.isToday) startLongPress(circle); }}
+        on:mouseup={cancelLongPress}
+        on:mouseleave={cancelLongPress}
+        on:touchstart={() => { if (habit.habit_type === 'timer' && circle.isToday) startLongPress(circle); }}
+        on:touchend={cancelLongPress}
+        on:touchcancel={cancelLongPress}
       >
         {circle.label || (isCircleActive(circle) ? liveLabel : circle.dayLetter)}
       </button>
