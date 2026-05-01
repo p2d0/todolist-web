@@ -96,7 +96,7 @@
       if (circle.isToday) {
         // Start/stop timer
         if (activeTimer && activeTimer.activeHabitId === habit.id && activeTimer.running) {
-          await stopTimer();
+          await stopTimer(habit);
         } else {
           startTimer(habit);
         }
@@ -122,10 +122,39 @@
     send({ type: 'timer:update', data: get(timerStore) });
   }
 
-  async function stopTimer() {
-    await timerStore.stop();
+  async function stopTimer(habit) {
+    const elapsed = getElapsed();
+    const date = dayjs().format('YYYY-MM-DD');
+
+    await fetch(`${base}/api/sessions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        habitId: habit.id,
+        date,
+        durationSeconds: elapsed,
+      }),
+    });
     send({ type: 'sessions:update' });
+
+    timerStore.update(v => ({
+      ...v,
+      activeHabitId: null,
+      running: false,
+      startTime: null,
+      elapsedBefore: 0,
+      elapsed: 0,
+    }));
+    send({ type: 'timer:update', data: get(timerStore) });
+
     updateCircleData();
+  }
+
+  function getElapsed() {
+    if (!activeTimer?.startTime) return 0;
+    const now = Date.now();
+    const elapsed = Math.floor((now - activeTimer.startTime) / 1000) + activeTimer.elapsedBefore;
+    return elapsed;
   }
 
   async function openTimeEditor(circle) {
