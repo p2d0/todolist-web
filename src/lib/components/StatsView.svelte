@@ -2,19 +2,25 @@
   import { base } from '$app/paths';
   import { onMount } from 'svelte';
 
-  let stats = null;
+  let allStats = [];
   let loading = true;
 
-  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const dayLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
-  $: monthLabel = stats ? `${monthNames[parseInt(stats.month.split('-')[1]) - 1]} ${stats.month.split('-')[0]}` : '';
-
   onMount(async () => {
+    const months = [];
     const now = new Date();
-    const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    const res = await fetch(`${base}/api/stats?month=${month}`);
-    stats = await res.json();
+    for (let i = 2; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+    }
+
+    const results = await Promise.all(
+      months.map(m => fetch(`${base}/api/stats?month=${m}`).then(r => r.json()))
+    );
+
+    allStats = results;
     loading = false;
   });
 
@@ -45,71 +51,132 @@
     }
   }
 
-  function buildCalendarGrid(daily) {
-    const grid = [];
-    const year = parseInt(stats.month.split('-')[0]);
-    const month = parseInt(stats.month.split('-')[1]) - 1;
-    const firstDay = new Date(year, month, 1);
-    let startOffset = firstDay.getDay(); // 0 = Sun
-    startOffset = startOffset === 0 ? 6 : startOffset - 1; // Convert to Mon=0
+  function buildMultiMonthGrid(monthlyData) {
+    // monthlyData is array of { month: '2026-05', habits: [...] }
+    // We need to build a single grid with all weeks across all months
+    const allWeeks = [];
+    const monthBoundaries = []; // Track which week starts a new month
 
-    let currentWeek = [];
-    // Leading empty days
-    for (let i = 0; i < startOffset; i++) {
-      currentWeek.push(null);
-    }
+    monthlyData.forEach((data, monthIdx) => {
+      const year = parseInt(data.month.split('-')[0]);
+      const month = parseInt(data.month.split('-')[1]) - 1;
+      const firstDay = new Date(year, month, 1);
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    for (let day = 1; day <= daily.length; day++) {
-      currentWeek.push({ day, value: daily[day - 1] });
-      if (currentWeek.length === 7 || day === daily.length) {
-        // Pad trailing empty days
+      let startOffset = firstDay.getDay();
+      startOffset = startOffset === 0 ? 6 : startOffset - 1;
+
+      let currentWeek = [];
+      for (let i = 0; i < startOffset; i++) {
+        currentWeek.push(null);
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        currentWeek.push({ day, month: data.month });
+        if (currentWeek.length === 7) {
+          allWeeks.push(currentWeek);
+          currentWeek = [];
+        }
+      }
+
+      if (currentWeek.length > 0) {
         while (currentWeek.length < 7) {
           currentWeek.push(null);
         }
-        grid.push(currentWeek);
+        allWeeks.push(currentWeek);
         currentWeek = [];
       }
-    }
-    return grid;
+
+      // Mark first week of this month for label
+      // Find the first week that has a day from this month
+      let firstWeekOfMonth = allWeeks.length - Math.ceil((daysInMonth + startOffset) / 7);
+      if (firstWeekOfMonth < 0) firstWeekOfMonth = 0;
+      monthBoundaries.push({
+        weekIndex: firstWeekOfMonth,
+        label: `${monthNames[month]} ${year}`
+      });
+    });
+
+    return { weeks: allWeeks, boundaries: monthBoundaries };
   }
 
-  function getWeekLabel(week, month) {
-    const firstCell = week.find(c => c !== null);
-    if (!firstCell) return '';
-    return `${month}-${String(firstCell.day).padStart(2, '0')}`;
+  function getHabitDataMap(allStats, habitId) {
+    const map = new Map();
+    for (const monthStat of allStats) {
+      const h = monthStat.habits.find(h => h.id === habitId);
+      if (h) {
+        map.set(monthStat.month, h.daily);
+      }
+    }
+    return map;
+  }
+
+  function getHabitTotal(allStats, habit) {
+    let total = 0;
+    for (const monthStat of allStats) {
+      const h = monthStat.habits.find(h => h.id === habit.id);
+      if (h) {
+        total += h.daily.reduce((a, b) => a + b, 0);
+      }
+    }
+    if (habit.type === 'timer') return `${Math.floor(total / 60)}m`;
+    if (habit.type === 'boolean') return `${total}x`;
+    return `avg ${total}`;
+  }
+
+  function getHabitMaxValue(allStats, habitId) {
+    let max = 1;
+    for (const monthStat of allStats) {
+      const h = monthStat.habits.find(h => h.id === habitId);
+      if (h) {
+        const monthMax = Math.max(...h.daily.filter(v => v > 0), 1);
+        if (monthMax > max) max = monthMax;
+      }
+    }
+    return max;
   }
 </script>
 
 <div class="stats-view">
   {#if loading}
     <div class="loading">Loading stats...</div>
-  {:else if stats}
-    <div class="month-header">{monthLabel}</div>
+  {:else if allStats.length > 0}
+    {@const gridInfo = buildMultiMonthGrid(allStats)}
+    {@const weeks = gridInfo.weeks}
+    {@const boundaries = gridInfo.boundaries}
+    {@const allHabits = allStats[allStats.length - 1]?.habits || []}
+    {@const totalMins = allStats.reduce((s, m) => s + m.summary.totalMinutes, 0)}
+    {@const totalComp = allStats.reduce((s, m) => s + m.summary.totalCompletions, 0)}
+    {@const bestStreak = Math.max(...allStats.map(m => m.summary.bestStreak), 0)}
+
+    <div class="stats-header">Last 3 Months</div>
 
     <!-- Summary Cards -->
     <div class="summary-row">
       <div class="summary-card">
         <div class="summary-icon">⏱️</div>
-        <div class="summary-value">{stats.summary.totalMinutes}m</div>
+        <div class="summary-value">{totalMins}m</div>
         <div class="summary-label">Total Time</div>
       </div>
       <div class="summary-card">
         <div class="summary-icon">✅</div>
-        <div class="summary-value">{stats.summary.totalCompletions}</div>
+        <div class="summary-value">{totalComp}</div>
         <div class="summary-label">Completions</div>
       </div>
       <div class="summary-card">
         <div class="summary-icon">🔥</div>
-        <div class="summary-value">{stats.summary.bestStreak}</div>
+        <div class="summary-value">{bestStreak}</div>
         <div class="summary-label">Best Streak</div>
       </div>
     </div>
 
-    <!-- Per-habit GitHub-style calendars -->
+    <!-- Per-habit calendars -->
     <div class="habit-stats-list">
-      {#each stats.habits as habit}
-        {@const grid = buildCalendarGrid(habit.daily)}
-        {@const maxValue = Math.max(...habit.daily.filter(v => v > 0), 1)}
+      {#each allHabits as habit}
+        {@const maxValue = getHabitMaxValue(allStats, habit.id)}
+        {@const habitData = getHabitDataMap(allStats, habit.id)}
+        {@const totalVal = Array.from(habitData.values()).flat().reduce((a, b) => a + b, 0)}
+
         <div class="habit-stat-card">
           <div class="habit-stat-header">
             <div class="habit-stat-info">
@@ -117,39 +184,62 @@
               <span class="habit-stat-badge">{habit.type}</span>
             </div>
             <div class="habit-stat-meta">
-              <span class="habit-stat-total">{formatTotal(habit)}</span>
+              <span class="habit-stat-total">
+                {habit.type === 'timer' ? `${Math.floor(totalVal / 60)}m` :
+                 habit.type === 'boolean' ? `${totalVal}x` :
+                 `avg ${totalVal}`}
+              </span>
               {#if habit.streak > 0}
                 <span class="habit-stat-streak">🔥 {habit.streak}</span>
               {/if}
             </div>
           </div>
 
-          <!-- GitHub-style contribution calendar -->
-          <div class="calendar">
-            <!-- Week day labels on the left -->
-            <div class="calendar-labels">
-              {#each dayLabels as label, i}
-                <div class="cal-label" class:dim={i % 2 !== 0}>{label[0]}</div>
-              {/each}
-            </div>
+          <!-- Multi-month calendar -->
+          <div class="calendar-scroll">
+            <div class="calendar">
+              <!-- Day labels -->
+              <div class="calendar-labels">
+                {#each dayLabels as label, i}
+                  <div class="cal-label" class:dim={i % 2 !== 0}>{label[0]}</div>
+                {/each}
+              </div>
 
-            <!-- Grid: rows = days, cols = weeks -->
-            <div class="calendar-grid">
-              {#each grid as week, wk}
-                <div class="week-column">
-                  {#each week as cell, dayIdx}
-                    {#if cell}
-                      <div
-                        class="cal-cell"
-                        style="background: {intensityColor(getIntensity(cell.value, maxValue))}"
-                        title="{stats.month}-{String(cell.day).padStart(2, '0')}: {cell.value}"
-                      ></div>
-                    {:else}
-                      <div class="cal-cell empty"></div>
-                    {/if}
+              <!-- Month labels + grid combined -->
+              <div class="calendar-body">
+                <!-- Month header row -->
+                <div class="month-header-row">
+                  {#each weeks as _, wkIdx}
+                    {@const boundary = boundaries.find(b => b.weekIndex === wkIdx)}
+                    <div class="week-header">
+                      {#if boundary}
+                        <span class="month-label-small">{boundary.label}</span>
+                      {/if}
+                    </div>
                   {/each}
                 </div>
-              {/each}
+
+                <!-- Grid -->
+                <div class="calendar-grid">
+                  {#each weeks as week}
+                    <div class="week-column">
+                      {#each week as cell, dayIdx}
+                        {#if cell}
+                          {@const daily = habitData.get(cell.month) || []}
+                          {@const value = daily[cell.day - 1] || 0}
+                          <div
+                            class="cal-cell"
+                            style="background: {intensityColor(getIntensity(value, maxValue))}"
+                            title="{cell.month}-{String(cell.day).padStart(2, '0')}: {value}"
+                          ></div>
+                        {:else}
+                          <div class="cal-cell empty"></div>
+                        {/if}
+                      {/each}
+                    </div>
+                  {/each}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -179,17 +269,17 @@
 
   .loading, .empty {
     text-align: center;
-    padding: 40px;
+    padding: 20px 0;
     color: #6c7086;
     font-size: 14px;
   }
 
-  .month-header {
-    font-size: 20px;
+  .stats-header {
+    font-size: 18px;
     font-weight: 700;
     color: #cdd6f4;
     text-align: center;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     margin-top: 4px;
   }
 
@@ -204,7 +294,7 @@
     background: #232636;
     border: 1px solid #363a4f;
     border-radius: 12px;
-    padding: 12px 8px;
+    padding: 12px 4px;
     text-align: center;
     display: flex;
     flex-direction: column;
@@ -217,13 +307,13 @@
   }
 
   .summary-value {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 700;
     color: #cdd6f4;
   }
 
   .summary-label {
-    font-size: 10px;
+    font-size: 9px;
     color: #6c7086;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -294,21 +384,26 @@
     color: #fab387;
   }
 
-  /* Calendar layout */
+  /* Calendar */
+  .calendar-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -12px;
+    padding: 0 12px;
+  }
+
   .calendar {
     display: flex;
     gap: 4px;
-    align-items: flex-start;
-    margin-top: 8px;
-    overflow-x: auto;
+    min-width: max-content;
   }
 
   .calendar-labels {
     display: flex;
     flex-direction: column;
     gap: 2px;
-    padding-top: 0;
     flex-shrink: 0;
+    padding-top: 14px;
   }
 
   .cal-label {
@@ -325,11 +420,37 @@
     color: #454a60;
   }
 
+  .calendar-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .month-header-row {
+    display: flex;
+    gap: 2px;
+    height: 12px;
+  }
+
+  .week-header {
+    width: 10px;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .month-label-small {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    font-size: 9px;
+    color: #6c7086;
+    white-space: nowrap;
+    line-height: 1;
+  }
+
   .calendar-grid {
     display: flex;
-    flex-direction: row;
     gap: 2px;
-    flex-shrink: 0;
   }
 
   .week-column {
@@ -348,7 +469,7 @@
 
   .cal-cell.empty {
     background: #2a2e3f;
-    opacity: 0.3;
+    opacity: 0.2;
   }
 
   /* Legend */
