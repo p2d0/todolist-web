@@ -300,6 +300,7 @@
     gap: 4px;
     align-items: flex-start;
     margin-top: 8px;
+    overflow-x: auto;
   }
 
   .calendar-labels {
@@ -307,6 +308,7 @@
     flex-direction: column;
     gap: 2px;
     padding-top: 0;
+    flex-shrink: 0;
   }
 
   .cal-label {
@@ -327,18 +329,18 @@
     display: flex;
     flex-direction: row;
     gap: 2px;
-    flex: 1;
+    flex-shrink: 0;
   }
 
   .week-column {
     display: flex;
     flex-direction: column;
     gap: 2px;
-    flex: 1;
+    flex-shrink: 0;
   }
 
   .cal-cell {
-    width: 100%;
+    width: 10px;
     height: 10px;
     border-radius: 2px;
     flex-shrink: 0;
