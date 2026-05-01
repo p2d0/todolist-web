@@ -125,14 +125,14 @@ export function deleteSessionsForDate(habitId, date) {
 	);
 }
 
-export function getTotalMinutes(habitId, date) {
+export function getTotalSeconds(habitId, date) {
 	const db = getDb();
 	const row = db
 		.prepare(
 			"SELECT COALESCE(SUM(duration_seconds), 0) as total FROM sessions WHERE habit_id = ? AND date = ?",
 		)
 		.get(habitId, date);
-	return Math.floor(row.total / 60);
+	return row.total;
 }
 
 export function hasSession(habitId, date) {

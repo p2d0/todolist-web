@@ -18,15 +18,18 @@
   let editingCircle = null;
   let showNumberEditor = false;
   let editingNumber = null;
+  let tick = 0;
 
   const unsub = timerStore.subscribe(v => activeTimer = v);
   const weekDataUnsub = weekDataStore.subscribe(() => updateCircleData());
 
   onMount(() => {
     buildCircles();
+    const interval = setInterval(() => tick = tick + 1, 1000);
     return () => {
       unsub();
       weekDataUnsub();
+      clearInterval(interval);
     };
   });
 
@@ -68,12 +71,20 @@
     circles = newCircles;
   }
 
+  function formatDuration(totalSeconds) {
+    const hrs = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    if (hrs > 0) return `${hrs}h`;
+    if (mins > 0) return `${mins}m`;
+    return `${totalSeconds}s`;
+  }
+
   function processCircleData(habit, sessions) {
     if (habit.habit_type === 'timer') {
       let totalSeconds = 0;
       for (const s of sessions) totalSeconds += s.duration_seconds;
-      const mins = Math.floor(totalSeconds / 60);
-      if (mins > 0) return { label: `${mins}m`, state: 'complete' };
+      const label = formatDuration(totalSeconds);
+      if (totalSeconds > 0) return { label, state: 'complete' };
       return { label: '', state: 'empty' };
     }
 
@@ -156,8 +167,8 @@
     }));
     send({ type: 'timer:update', data: get(timerStore) });
 
-    const mins = Math.floor(elapsed / 60);
-    circles = circles.map(c => c.date === date ? { ...c, state: mins > 0 ? 'complete' : 'empty', label: mins > 0 ? `${mins}m` : '' } : c);
+    const label = elapsed > 0 ? formatDuration(elapsed) : '';
+    circles = circles.map(c => c.date === date ? { ...c, state: elapsed > 0 ? 'complete' : 'empty', label } : c);
   }
 
   function getElapsed() {
@@ -168,9 +179,9 @@
   }
 
   async function openTimeEditor(circle) {
-    const res = await fetch(`${base}/api/sessions?type=minutes&habitId=${habit.id}&date=${circle.date}`);
+    const res = await fetch(`${base}/api/sessions?type=seconds&habitId=${habit.id}&date=${circle.date}`);
     const data = await res.json();
-    editingCircle = { ...circle, durationSeconds: data.minutes * 60 };
+    editingCircle = { ...circle, durationSeconds: data.durationSeconds };
     showTimeEditor = true;
   }
 
@@ -213,6 +224,12 @@
   $: rowClass = habit.habit_type === 'timer' && activeTimer && activeTimer.activeHabitId === habit.id && activeTimer.running
     ? 'habit-row active'
     : 'habit-row';
+
+  $: liveLabel = (() => {
+    if (habit.habit_type !== 'timer' || !activeTimer || activeTimer.activeHabitId !== habit.id || !activeTimer.running) return '';
+    const secs = getElapsed();
+    return formatDuration(secs);
+  })();
 </script>
 
 <div class={rowClass}>
@@ -228,7 +245,7 @@
         class:circle-active={isCircleActive(circle)}
         on:click={() => handleCircleClick(circle)}
       >
-        {circle.label || circle.dayLetter}
+        {circle.label || (isCircleActive(circle) ? liveLabel : circle.dayLetter)}
       </button>
     {/each}
   </div>
