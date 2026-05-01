@@ -5,14 +5,14 @@
   let allStats = [];
   let loading = true;
 
-  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const dayLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
   onMount(async () => {
-    const months = [];
     const now = new Date();
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const months = [];
+    for (let i = -2; i <= 2; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
       months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
     }
 
@@ -104,7 +104,7 @@
 
       monthHeaders.push({
         weekIndex: firstWeekIndex,
-        label: `${monthNames[month]} ${year}`
+        label: `${MONTH_NAMES[month]} ${year}`
       });
     });
 
@@ -119,12 +119,13 @@
     {@const gridInfo = buildMultiMonthGrid(allStats)}
     {@const weeks = gridInfo.weeks}
     {@const monthHeaders = gridInfo.monthHeaders}
+    {@const monthStarts = new Set(monthHeaders.map(m => m.weekIndex))}
     {@const allHabits = allStats.flatMap(m => m.habits).reduce((acc, h) => { if (!acc.find(x => x.id === h.id)) acc.push(h); return acc; }, [])}
     {@const totalMins = allStats.reduce((s, m) => s + m.summary.totalMinutes, 0)}
     {@const totalComp = allStats.reduce((s, m) => s + m.summary.totalCompletions, 0)}
     {@const bestStreak = Math.max(...allStats.map(m => m.summary.bestStreak), 0)}
 
-    <div class="stats-header">Last 6 Months</div>
+    <div class="stats-header">Stats</div>
 
     <div class="summary-row">
       <div class="summary-card">
@@ -171,9 +172,10 @@
 <!-- Table-based calendar for perfect alignment -->
           <div class="calendar-scroll">
             <div class="month-label-row" style="padding-left: {14 + 2}px">
-              {#each monthHeaders as header}
-                {@const endIdx = monthHeaders[monthHeaders.indexOf(header) + 1]?.weekIndex ?? weeks.length}
-                {@const colWidth = (endIdx - header.weekIndex) * (10 + 2)}
+              {#each monthHeaders as header, i}
+                {@const endIdx = monthHeaders[i + 1]?.weekIndex ?? weeks.length}
+                {@const numGaps = i > 0 ? 1 : 0}
+                {@const colWidth = (endIdx - header.weekIndex) * (10 + 2) + numGaps * 4}
                 <span class="month-label" style="width: {colWidth}px">{header.label}</span>
               {/each}
             </div>
@@ -182,18 +184,18 @@
                 {#each [0,1,2,3,4,5,6] as dayIdx}
                   <tr>
                     <td class="day-label-cell">{dayLabels[dayIdx][0]}</td>
-                    {#each weeks as week}
+                    {#each weeks as week, wkIdx}
                       {@const cell = week[dayIdx]}
                       {#if cell}
                         {@const daily = habitData.get(cell.month) || []}
                         {@const value = daily[cell.day - 1] || 0}
                         <td
-                          class="cal-cell"
+                          class="cal-cell {monthStarts.has(wkIdx) && wkIdx > 0 ? 'month-gap' : ''}"
                           style="background: {intensityColor(getIntensity(value, maxValue, habit.type))}; opacity: {cellOpacity(value, habit.type)}"
                           title="{cell.month}-{String(cell.day).padStart(2, '0')}: {habit.type === 'timer' ? Math.floor(value / 60) + 'm' : value}"
                         ></td>
                       {:else}
-                        <td class="cal-cell empty"></td>
+                        <td class="cal-cell empty {monthStarts.has(wkIdx) && wkIdx > 0 ? 'month-gap' : ''}"></td>
                       {/if}
                     {/each}
                   </tr>
@@ -317,7 +319,7 @@
   .habit-stat-total { font-size: 14px; font-weight: 700; color: #b4befe; }
   .habit-stat-streak { font-size: 12px; color: #fab387; }
 
-  /* Table calendar - bulletproof alignment */
+  /* Table calendar */
   .calendar-scroll {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -368,6 +370,10 @@
     height: 10px;
     padding: 0;
     border-radius: 2px;
+  }
+
+  .cal-cell.month-gap {
+    padding-left: 4px;
   }
 
   .cal-cell.empty {
