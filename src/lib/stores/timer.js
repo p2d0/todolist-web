@@ -9,7 +9,7 @@ export const weekSummaryStore = writable("");
 
 export const hideCompletedStore = writable(false);
 
-export const weekDataStore = writable({}); // { habitId: [ { date, duration_seconds, value }, ... ] }
+export const weekDataStore = writable([]); // { habitId: [ { date, duration_seconds, value }, ... ] }
 
 export const timerStore = writable({
 	activeHabitId: null,
