@@ -31,18 +31,20 @@
     if (Notification.permission !== 'granted') return;
     const mode = activeTimer?.mode || habit.mode || 'stopwatch';
     const body = `Timer started: ${habit.description} (${mode} mode)`;
+    const opts = {
+      body,
+      icon: `${base}/icons/icon-192.png`,
+      tag: 'timer-start',
+      requireInteraction: true,
+      data: { type: 'timer-start' },
+    };
     try {
-      const n = new Notification('PomoTasker', {
-        body,
-        icon: `${base}/icons/icon-192.png`,
-        tag: 'timer-start',
-        requireInteraction: true,
-        actions: [{ action: 'stop', title: 'Stop Timer' }],
-      });
-      n.addEventListener('click', () => {
-        window.focus();
-        stopTimer();
-      });
+      if (navigator.serviceWorker?.controller) {
+        navigator.serviceWorker.ready.then(reg => reg.showNotification('PomoTasker', opts));
+      } else {
+        const n = new Notification('PomoTasker', opts);
+        n.addEventListener('click', () => { window.focus(); stopTimer(); });
+      }
     } catch (err) {
       console.error('Notification error:', err);
     }
@@ -53,13 +55,19 @@
     const mins = Math.floor(elapsed / 60);
     const secs = elapsed % 60;
     const body = `Timer stopped: ${habit.description} (${mins}m ${secs}s)`;
+    const opts = {
+      body,
+      icon: `${base}/icons/icon-192.png`,
+      tag: 'timer-stop',
+      requireInteraction: true,
+      data: { type: 'timer-stop' },
+    };
     try {
-      new Notification('PomoTasker', {
-        body,
-        icon: `${base}/icons/icon-192.png`,
-        tag: 'timer-stop',
-        requireInteraction: true,
-      });
+      if (navigator.serviceWorker?.controller) {
+        navigator.serviceWorker.ready.then(reg => reg.showNotification('PomoTasker', opts));
+      } else {
+        new Notification('PomoTasker', opts);
+      }
     } catch (err) {
       console.error('Notification error:', err);
     }
@@ -194,13 +202,20 @@
 
   async function onPomodoroComplete() {
     if (Notification.permission === 'granted') {
+      const opts = {
+        body: 'Pomodoro session finished!',
+        icon: `${base}/icons/icon-192.png`,
+        requireInteraction: true,
+        tag: 'pomodoro-done',
+        data: { type: 'pomodoro-done' },
+      };
       try {
-        new Notification('Pomodoro complete!', {
-          body: 'Pomodoro session finished!',
-          icon: `${base}/icons/icon-192.png`,
-          requireInteraction: true,
-          tag: 'pomodoro-done',
-        });
+        if (navigator.serviceWorker?.controller) {
+          const reg = await navigator.serviceWorker.ready;
+          reg.showNotification('Pomodoro complete!', opts);
+        } else {
+          new Notification('Pomodoro complete!', opts);
+        }
       } catch (err) {
         console.error('Notification error:', err);
       }
