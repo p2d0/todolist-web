@@ -24,26 +24,23 @@
       Notification.requestPermission().then(perm => {
         notifPermission = perm;
       });
+    } else {
+      notifPermission = Notification.permission;
     }
-  }
-
-  async function getServiceWorkerReg() {
-    if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return null;
-    const reg = await navigator.serviceWorker.ready;
-    return reg;
   }
 
   async function showNotif(title, opts) {
     if (Notification.permission !== 'granted') return;
     try {
-      const reg = await getServiceWorkerReg();
-      if (reg) {
-        reg.showNotification(title, opts);
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        const reg = await navigator.serviceWorker.ready;
+        await reg.showNotification(title, opts);
       } else {
         new Notification(title, opts);
       }
     } catch (err) {
       console.error('Notification error:', err);
+      try { new Notification(title, opts); } catch (_) {}
     }
   }
 
