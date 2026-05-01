@@ -23,12 +23,7 @@
 
   onMount(() => {
     buildCircles();
-    const onSync = () => updateCircleData();
-    window.addEventListener('sync:sessions', onSync);
-    return () => {
-      unsub();
-      window.removeEventListener('sync:sessions', onSync);
-    };
+    return unsub;
   });
 
   function buildCircles() {
@@ -52,39 +47,48 @@
   }
 
   async function updateCircleData() {
+    const startDate = circles[0]?.date;
+    const endDate = circles[circles.length - 1]?.date;
+    if (!startDate || !endDate) return;
+
+    const res = await fetch(`${base}/api/sessions?habitId=${habit.id}&startDate=${startDate}&endDate=${endDate}`);
+    const sessions = await res.json(); // array of { date, duration_seconds, value }
+    const sessionMap = {};
+    for (const s of sessions) {
+      if (!sessionMap[s.date]) sessionMap[s.date] = [];
+      sessionMap[s.date].push(s);
+    }
+
     const newCircles = [];
     for (const circle of circles) {
-      const data = await getCircleData(habit, circle.date);
+      const daySessions = sessionMap[circle.date] || [];
+      const data = processCircleData(habit, daySessions);
       newCircles.push({ ...circle, label: data.label, state: data.state });
     }
     circles = newCircles;
   }
 
-  async function getCircleData(habit, date) {
+  function processCircleData(habit, sessions) {
     if (habit.habit_type === 'timer') {
-      const res = await fetch(`${base}/api/sessions?type=minutes&habitId=${habit.id}&date=${date}`);
-      const data = await res.json();
-      const mins = data.minutes;
-      if (mins > 0) {
-        return { label: `${mins}m`, state: 'complete' };
-      }
+      let totalSeconds = 0;
+      for (const s of sessions) totalSeconds += s.duration_seconds;
+      const mins = Math.floor(totalSeconds / 60);
+      if (mins > 0) return { label: `${mins}m`, state: 'complete' };
       return { label: '', state: 'empty' };
     }
 
     if (habit.habit_type === 'boolean') {
-      const res = await fetch(`${base}/api/sessions?type=has&habitId=${habit.id}&date=${date}`);
-      const data = await res.json();
-      return { label: data.has ? '✓' : '', state: data.has ? 'complete' : 'empty' };
+      if (sessions.length > 0) return { label: '✓', state: 'complete' };
+      return { label: '', state: 'empty' };
     }
 
     if (habit.habit_type === 'number') {
-      const res = await fetch(`${base}/api/sessions?type=value&habitId=${habit.id}&date=${date}`);
-      const data = await res.json();
-      if (data.value !== null && data.value !== undefined) {
-        if (habit.min_value !== null && habit.min_value !== undefined && data.value >= habit.min_value) {
-          return { label: String(data.value), state: 'complete' };
+      const val = sessions[0]?.value;
+      if (val !== null && val !== undefined) {
+        if (habit.min_value !== null && habit.min_value !== undefined && val >= habit.min_value) {
+          return { label: String(val), state: 'complete' };
         }
-        return { label: String(data.value), state: 'partial' };
+        return { label: String(val), state: 'partial' };
       }
       return { label: '', state: 'empty' };
     }
