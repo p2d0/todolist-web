@@ -11,7 +11,7 @@
   onMount(async () => {
     const months = [];
     const now = new Date();
-    for (let i = 2; i >= 0; i--) {
+    for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
     }
@@ -112,12 +112,12 @@
     {@const gridInfo = buildMultiMonthGrid(allStats)}
     {@const weeks = gridInfo.weeks}
     {@const monthHeaders = gridInfo.monthHeaders}
-    {@const allHabits = allStats[allStats.length - 1]?.habits || []}
+    {@const allHabits = allStats.flatMap(m => m.habits).reduce((acc, h) => { if (!acc.find(x => x.id === h.id)) acc.push(h); return acc; }, [])}
     {@const totalMins = allStats.reduce((s, m) => s + m.summary.totalMinutes, 0)}
     {@const totalComp = allStats.reduce((s, m) => s + m.summary.totalCompletions, 0)}
     {@const bestStreak = Math.max(...allStats.map(m => m.summary.bestStreak), 0)}
 
-    <div class="stats-header">Last 3 Months</div>
+    <div class="stats-header">Last 6 Months</div>
 
     <div class="summary-row">
       <div class="summary-card">
@@ -161,22 +161,16 @@
             </div>
           </div>
 
-          <!-- Table-based calendar for perfect alignment -->
+<!-- Table-based calendar for perfect alignment -->
           <div class="calendar-scroll">
+            <div class="month-label-row" style="padding-left: {14 + 2}px">
+              {#each monthHeaders as header}
+                {@const endIdx = monthHeaders[monthHeaders.indexOf(header) + 1]?.weekIndex ?? weeks.length}
+                {@const colWidth = (endIdx - header.weekIndex) * (10 + 2)}
+                <span class="month-label" style="width: {colWidth}px">{header.label}</span>
+              {/each}
+            </div>
             <table class="calendar-table">
-              <thead>
-                <tr>
-                  <th class="corner-cell"></th>
-                  {#each weeks as _, wkIdx}
-                    {@const header = monthHeaders.find(m => m.weekIndex === wkIdx)}
-                    <th class="month-header-cell">
-                      {#if header}
-                        <span class="month-label">{header.label}</span>
-                      {/if}
-                    </th>
-                  {/each}
-                </tr>
-              </thead>
               <tbody>
                 {#each [0,1,2,3,4,5,6] as dayIdx}
                   <tr>
@@ -328,18 +322,13 @@
     border-collapse: separate;
     border-spacing: 2px;
     table-layout: fixed;
+    width: max-content;
   }
 
-  .corner-cell {
-    width: 14px;
-    min-width: 14px;
-  }
-
-  .month-header-cell {
-    height: 12px;
-    padding: 0;
-    vertical-align: bottom;
-    text-align: left;
+  .month-label-row {
+    display: flex;
+    gap: 0;
+    margin-bottom: 2px;
   }
 
   .month-label {
@@ -347,11 +336,14 @@
     color: #6c7086;
     white-space: nowrap;
     line-height: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .day-label-cell {
     width: 14px;
     min-width: 14px;
+    max-width: 14px;
     height: 10px;
     padding: 0;
     font-size: 9px;
@@ -359,6 +351,8 @@
     text-align: right;
     vertical-align: middle;
     line-height: 10px;
+    overflow: hidden;
+    white-space: nowrap;
   }
 
   .cal-cell {

@@ -186,17 +186,33 @@ export function getMonthlyCompletions(habitId, month) {
 	return row.cnt;
 }
 
-export function getMonthlyDailyData(habitId, month, daysInMonth) {
+export function getMonthlyDailyData(habitId, month, daysInMonth, habitType) {
 	const db = getDb();
 	const daily = [];
 	for (let day = 1; day <= daysInMonth; day++) {
 		const date = `${month}-${String(day).padStart(2, "0")}`;
-		const row = db
-			.prepare(
-				"SELECT COALESCE(SUM(duration_seconds), 0) as total FROM sessions WHERE habit_id = ? AND date = ?",
-			)
-			.get(habitId, date);
-		daily.push(row.total);
+		if (habitType === "timer") {
+			const row = db
+				.prepare(
+					"SELECT COALESCE(SUM(duration_seconds), 0) as total FROM sessions WHERE habit_id = ? AND date = ?",
+				)
+				.get(habitId, date);
+			daily.push(row.total);
+		} else if (habitType === "boolean") {
+			const row = db
+				.prepare(
+					"SELECT COUNT(*) as cnt FROM sessions WHERE habit_id = ? AND date = ?",
+				)
+				.get(habitId, date);
+			daily.push(row.cnt > 0 ? 1 : 0);
+		} else {
+			const row = db
+				.prepare(
+					"SELECT COALESCE(SUM(value), 0) as total FROM sessions WHERE habit_id = ? AND date = ?",
+				)
+				.get(habitId, date);
+			daily.push(row.total);
+		}
 	}
 	return daily;
 }

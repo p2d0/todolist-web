@@ -25,7 +25,7 @@ export function GET({ url }) {
 	let bestStreak = 0;
 
 	const habitStats = habits.map((habit) => {
-		const daily = getMonthlyDailyData(habit.id, month, daysInMonth);
+		const daily = getMonthlyDailyData(habit.id, month, daysInMonth, habit.habit_type);
 		const minutes = getMonthlyMinutes(habit.id, month);
 		const completions = getMonthlyCompletions(habit.id, month);
 		const streak = getStreak(habit.id);
