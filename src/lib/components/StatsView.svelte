@@ -24,11 +24,25 @@
     loading = false;
   });
 
-  function formatTotal(habit) {
-    if (habit.type === 'timer') return `${habit.total}m`;
-    if (habit.type === 'boolean') return `${habit.total}x`;
-    if (habit.type === 'number') return `avg ${habit.total}`;
-    return String(habit.total);
+  function getHabitDataMap(allStats, habitId) {
+    const map = new Map();
+    for (const monthStat of allStats) {
+      const h = monthStat.habits.find(h => h.id === habitId);
+      if (h) map.set(monthStat.month, h.daily);
+    }
+    return map;
+  }
+
+  function getHabitMaxValue(allStats, habitId) {
+    let max = 1;
+    for (const monthStat of allStats) {
+      const h = monthStat.habits.find(h => h.id === habitId);
+      if (h) {
+        const monthMax = Math.max(...h.daily.filter(v => v > 0), 1);
+        if (monthMax > max) max = monthMax;
+      }
+    }
+    return max;
   }
 
   function getIntensity(value, max) {
@@ -52,24 +66,21 @@
   }
 
   function buildMultiMonthGrid(monthlyData) {
-    // monthlyData is array of { month: '2026-05', habits: [...] }
-    // We need to build a single grid with all weeks across all months
     const allWeeks = [];
-    const monthBoundaries = []; // Track which week starts a new month
+    const monthHeaders = [];
 
-    monthlyData.forEach((data, monthIdx) => {
+    monthlyData.forEach((data) => {
       const year = parseInt(data.month.split('-')[0]);
       const month = parseInt(data.month.split('-')[1]) - 1;
       const firstDay = new Date(year, month, 1);
       const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const firstWeekIndex = allWeeks.length;
 
       let startOffset = firstDay.getDay();
       startOffset = startOffset === 0 ? 6 : startOffset - 1;
 
       let currentWeek = [];
-      for (let i = 0; i < startOffset; i++) {
-        currentWeek.push(null);
-      }
+      for (let i = 0; i < startOffset; i++) currentWeek.push(null);
 
       for (let day = 1; day <= daysInMonth; day++) {
         currentWeek.push({ day, month: data.month });
@@ -80,60 +91,17 @@
       }
 
       if (currentWeek.length > 0) {
-        while (currentWeek.length < 7) {
-          currentWeek.push(null);
-        }
+        while (currentWeek.length < 7) currentWeek.push(null);
         allWeeks.push(currentWeek);
-        currentWeek = [];
       }
 
-      // Mark first week of this month for label
-      // Find the first week that has a day from this month
-      let firstWeekOfMonth = allWeeks.length - Math.ceil((daysInMonth + startOffset) / 7);
-      if (firstWeekOfMonth < 0) firstWeekOfMonth = 0;
-      monthBoundaries.push({
-        weekIndex: firstWeekOfMonth,
+      monthHeaders.push({
+        weekIndex: firstWeekIndex,
         label: `${monthNames[month]} ${year}`
       });
     });
 
-    return { weeks: allWeeks, boundaries: monthBoundaries };
-  }
-
-  function getHabitDataMap(allStats, habitId) {
-    const map = new Map();
-    for (const monthStat of allStats) {
-      const h = monthStat.habits.find(h => h.id === habitId);
-      if (h) {
-        map.set(monthStat.month, h.daily);
-      }
-    }
-    return map;
-  }
-
-  function getHabitTotal(allStats, habit) {
-    let total = 0;
-    for (const monthStat of allStats) {
-      const h = monthStat.habits.find(h => h.id === habit.id);
-      if (h) {
-        total += h.daily.reduce((a, b) => a + b, 0);
-      }
-    }
-    if (habit.type === 'timer') return `${Math.floor(total / 60)}m`;
-    if (habit.type === 'boolean') return `${total}x`;
-    return `avg ${total}`;
-  }
-
-  function getHabitMaxValue(allStats, habitId) {
-    let max = 1;
-    for (const monthStat of allStats) {
-      const h = monthStat.habits.find(h => h.id === habitId);
-      if (h) {
-        const monthMax = Math.max(...h.daily.filter(v => v > 0), 1);
-        if (monthMax > max) max = monthMax;
-      }
-    }
-    return max;
+    return { weeks: allWeeks, monthHeaders };
   }
 </script>
 
@@ -143,7 +111,7 @@
   {:else if allStats.length > 0}
     {@const gridInfo = buildMultiMonthGrid(allStats)}
     {@const weeks = gridInfo.weeks}
-    {@const boundaries = gridInfo.boundaries}
+    {@const monthHeaders = gridInfo.monthHeaders}
     {@const allHabits = allStats[allStats.length - 1]?.habits || []}
     {@const totalMins = allStats.reduce((s, m) => s + m.summary.totalMinutes, 0)}
     {@const totalComp = allStats.reduce((s, m) => s + m.summary.totalCompletions, 0)}
@@ -151,7 +119,6 @@
 
     <div class="stats-header">Last 3 Months</div>
 
-    <!-- Summary Cards -->
     <div class="summary-row">
       <div class="summary-card">
         <div class="summary-icon">⏱️</div>
@@ -170,7 +137,6 @@
       </div>
     </div>
 
-    <!-- Per-habit calendars -->
     <div class="habit-stats-list">
       {#each allHabits as habit}
         {@const maxValue = getHabitMaxValue(allStats, habit.id)}
@@ -195,55 +161,46 @@
             </div>
           </div>
 
-          <!-- Multi-month calendar -->
+          <!-- Table-based calendar for perfect alignment -->
           <div class="calendar-scroll">
-            <div class="calendar">
-              <!-- Day labels -->
-              <div class="calendar-labels">
-                {#each dayLabels as label, i}
-                  <div class="cal-label" class:dim={i % 2 !== 0}>{label[0]}</div>
-                {/each}
-              </div>
-
-              <!-- Month labels + grid combined -->
-              <div class="calendar-body">
-                <!-- Month header row -->
-                <div class="month-header-row">
+            <table class="calendar-table">
+              <thead>
+                <tr>
+                  <th class="corner-cell"></th>
                   {#each weeks as _, wkIdx}
-                    {@const boundary = boundaries.find(b => b.weekIndex === wkIdx)}
-                    <div class="week-header">
-                      {#if boundary}
-                        <span class="month-label-small">{boundary.label}</span>
+                    {@const header = monthHeaders.find(m => m.weekIndex === wkIdx)}
+                    <th class="month-header-cell">
+                      {#if header}
+                        <span class="month-label">{header.label}</span>
                       {/if}
-                    </div>
+                    </th>
                   {/each}
-                </div>
-
-                <!-- Grid -->
-                <div class="calendar-grid">
-                  {#each weeks as week}
-                    <div class="week-column">
-                      {#each week as cell, dayIdx}
-                        {#if cell}
-                          {@const daily = habitData.get(cell.month) || []}
-                          {@const value = daily[cell.day - 1] || 0}
-                          <div
-                            class="cal-cell"
-                            style="background: {intensityColor(getIntensity(value, maxValue))}"
-                            title="{cell.month}-{String(cell.day).padStart(2, '0')}: {value}"
-                          ></div>
-                        {:else}
-                          <div class="cal-cell empty"></div>
-                        {/if}
-                      {/each}
-                    </div>
-                  {/each}
-                </div>
-              </div>
-            </div>
+                </tr>
+              </thead>
+              <tbody>
+                {#each [0,1,2,3,4,5,6] as dayIdx}
+                  <tr>
+                    <td class="day-label-cell">{dayLabels[dayIdx][0]}</td>
+                    {#each weeks as week}
+                      {@const cell = week[dayIdx]}
+                      {#if cell}
+                        {@const daily = habitData.get(cell.month) || []}
+                        {@const value = daily[cell.day - 1] || 0}
+                        <td
+                          class="cal-cell"
+                          style="background: {intensityColor(getIntensity(value, maxValue))}"
+                          title="{cell.month}-{String(cell.day).padStart(2, '0')}: {value}"
+                        ></td>
+                      {:else}
+                        <td class="cal-cell empty"></td>
+                      {/if}
+                    {/each}
+                  </tr>
+                {/each}
+              </tbody>
+            </table>
           </div>
 
-          <!-- Legend -->
           <div class="legend">
             <span class="legend-label">Less</span>
             {#each [0, 1, 2, 3, 4] as lvl}
@@ -269,9 +226,9 @@
 
   .loading, .empty {
     text-align: center;
-    padding: 20px 0;
     color: #6c7086;
     font-size: 14px;
+    margin: 20px 0;
   }
 
   .stats-header {
@@ -302,28 +259,11 @@
     gap: 4px;
   }
 
-  .summary-icon {
-    font-size: 20px;
-  }
+  .summary-icon { font-size: 20px; }
+  .summary-value { font-size: 16px; font-weight: 700; color: #cdd6f4; }
+  .summary-label { font-size: 9px; color: #6c7086; text-transform: uppercase; letter-spacing: 0.5px; }
 
-  .summary-value {
-    font-size: 16px;
-    font-weight: 700;
-    color: #cdd6f4;
-  }
-
-  .summary-label {
-    font-size: 9px;
-    color: #6c7086;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .habit-stats-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
+  .habit-stats-list { display: flex; flex-direction: column; gap: 12px; }
 
   .habit-stat-card {
     background: #232636;
@@ -373,18 +313,10 @@
     flex-shrink: 0;
   }
 
-  .habit-stat-total {
-    font-size: 14px;
-    font-weight: 700;
-    color: #b4befe;
-  }
+  .habit-stat-total { font-size: 14px; font-weight: 700; color: #b4befe; }
+  .habit-stat-streak { font-size: 12px; color: #fab387; }
 
-  .habit-stat-streak {
-    font-size: 12px;
-    color: #fab387;
-  }
-
-  /* Calendar */
+  /* Table calendar - bulletproof alignment */
   .calendar-scroll {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -392,79 +324,49 @@
     padding: 0 12px;
   }
 
-  .calendar {
-    display: flex;
-    gap: 4px;
-    min-width: max-content;
+  .calendar-table {
+    border-collapse: separate;
+    border-spacing: 2px;
+    table-layout: fixed;
   }
 
-  .calendar-labels {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    flex-shrink: 0;
-    padding-top: 14px;
-  }
-
-  .cal-label {
-    font-size: 9px;
-    color: #a6adc8;
+  .corner-cell {
     width: 14px;
-    height: 10px;
-    line-height: 10px;
-    text-align: right;
-    flex-shrink: 0;
+    min-width: 14px;
   }
 
-  .cal-label.dim {
-    color: #454a60;
-  }
-
-  .calendar-body {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .month-header-row {
-    display: flex;
-    gap: 2px;
+  .month-header-cell {
     height: 12px;
+    padding: 0;
+    vertical-align: bottom;
+    text-align: left;
   }
 
-  .week-header {
-    width: 10px;
-    flex-shrink: 0;
-    position: relative;
-  }
-
-  .month-label-small {
-    position: absolute;
-    left: 0;
-    bottom: 0;
+  .month-label {
     font-size: 9px;
     color: #6c7086;
     white-space: nowrap;
     line-height: 1;
   }
 
-  .calendar-grid {
-    display: flex;
-    gap: 2px;
-  }
-
-  .week-column {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    flex-shrink: 0;
+  .day-label-cell {
+    width: 14px;
+    min-width: 14px;
+    height: 10px;
+    padding: 0;
+    font-size: 9px;
+    color: #a6adc8;
+    text-align: right;
+    vertical-align: middle;
+    line-height: 10px;
   }
 
   .cal-cell {
     width: 10px;
+    min-width: 10px;
     height: 10px;
+    padding: 0;
     border-radius: 2px;
-    flex-shrink: 0;
   }
 
   .cal-cell.empty {
@@ -481,14 +383,6 @@
     margin-top: 8px;
   }
 
-  .legend-label {
-    font-size: 10px;
-    color: #6c7086;
-  }
-
-  .legend-box {
-    width: 10px;
-    height: 10px;
-    border-radius: 2px;
-  }
+  .legend-label { font-size: 10px; color: #6c7086; }
+  .legend-box { width: 10px; height: 10px; border-radius: 2px; }
 </style>
