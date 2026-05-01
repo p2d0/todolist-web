@@ -27,50 +27,47 @@
     }
   }
 
-  function showStartNotif(habit) {
+  async function getServiceWorkerReg() {
+    if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return null;
+    const reg = await navigator.serviceWorker.ready;
+    return reg;
+  }
+
+  async function showNotif(title, opts) {
     if (Notification.permission !== 'granted') return;
-    const mode = activeTimer?.mode || habit.mode || 'stopwatch';
-    const body = `Timer started: ${habit.description} (${mode} mode)`;
-    const opts = {
-      body,
-      icon: `${base}/icons/icon-192.png`,
-      tag: 'timer-start',
-      requireInteraction: true,
-      data: { type: 'timer-start' },
-    };
     try {
-      if (navigator.serviceWorker?.controller) {
-        navigator.serviceWorker.ready.then(reg => reg.showNotification('PomoTasker', opts));
+      const reg = await getServiceWorkerReg();
+      if (reg) {
+        reg.showNotification(title, opts);
       } else {
-        const n = new Notification('PomoTasker', opts);
-        n.addEventListener('click', () => { window.focus(); stopTimer(); });
+        new Notification(title, opts);
       }
     } catch (err) {
       console.error('Notification error:', err);
     }
   }
 
+  function showStartNotif(habit) {
+    const mode = activeTimer?.mode || habit.mode || 'stopwatch';
+    showNotif('PomoTasker', {
+      body: `Timer started: ${habit.description} (${mode} mode)`,
+      icon: `${base}/icons/icon-192.png`,
+      tag: 'timer-start',
+      vibrate: [200],
+      data: { type: 'timer-start' },
+    });
+  }
+
   function showStopNotif(habit, elapsed) {
-    if (Notification.permission !== 'granted') return;
     const mins = Math.floor(elapsed / 60);
     const secs = elapsed % 60;
-    const body = `Timer stopped: ${habit.description} (${mins}m ${secs}s)`;
-    const opts = {
-      body,
+    showNotif('PomoTasker', {
+      body: `Timer stopped: ${habit.description} (${mins}m ${secs}s)`,
       icon: `${base}/icons/icon-192.png`,
       tag: 'timer-stop',
-      requireInteraction: true,
+      vibrate: [100, 50, 100],
       data: { type: 'timer-stop' },
-    };
-    try {
-      if (navigator.serviceWorker?.controller) {
-        navigator.serviceWorker.ready.then(reg => reg.showNotification('PomoTasker', opts));
-      } else {
-        new Notification('PomoTasker', opts);
-      }
-    } catch (err) {
-      console.error('Notification error:', err);
-    }
+    });
   }
 
   const tUnsub = timerStore.subscribe(v => {
@@ -202,23 +199,13 @@
 
   async function onPomodoroComplete() {
     if (Notification.permission === 'granted') {
-      const opts = {
+      showNotif('Pomodoro complete!', {
         body: 'Pomodoro session finished!',
         icon: `${base}/icons/icon-192.png`,
-        requireInteraction: true,
         tag: 'pomodoro-done',
+        vibrate: [200, 100, 200],
         data: { type: 'pomodoro-done' },
-      };
-      try {
-        if (navigator.serviceWorker?.controller) {
-          const reg = await navigator.serviceWorker.ready;
-          reg.showNotification('Pomodoro complete!', opts);
-        } else {
-          new Notification('Pomodoro complete!', opts);
-        }
-      } catch (err) {
-        console.error('Notification error:', err);
-      }
+      });
     }
     await stopTimer();
   }
