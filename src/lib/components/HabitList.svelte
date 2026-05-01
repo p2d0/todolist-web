@@ -2,8 +2,9 @@
   import { base } from '$app/paths';
   import HabitRow from './HabitRow.svelte';
   import { onMount } from 'svelte';
-  import { hideCompletedStore } from '$lib/stores/timer.js';
+  import { hideCompletedStore, weekDataStore } from '$lib/stores/timer.js';
   import dayjs from 'dayjs';
+  import { get } from 'svelte/store';
 
   export let habitsStore;
   export let onEdit = null;
@@ -45,27 +46,22 @@
     habitsStore.set(data);
   }
 
-  async function checkCompleted() {
+  function checkCompleted() {
     const today = dayjs().format('YYYY-MM-DD');
+    const allRows = get(weekDataStore);
     const results = {};
-    const promises = habits.map(async (h) => {
-      let done = false;
+    for (const h of habits) {
+      const row = allRows.find(r => r.habit_id === h.id && r.date === today);
       if (h.habit_type === 'boolean') {
-        const res = await fetch(`${base}/api/sessions?type=has&habitId=${h.id}&date=${today}`);
-        const data = await res.json();
-        if (data.has) done = true;
+        results[h.id] = row ? true : false;
       } else if (h.habit_type === 'timer') {
-        const res = await fetch(`${base}/api/sessions?type=minutes&habitId=${h.id}&date=${today}`);
-        const data = await res.json();
-        if (data.minutes > 0) done = true;
+        results[h.id] = row ? row.duration_seconds > 0 : false;
       } else if (h.habit_type === 'number') {
-        const res = await fetch(`${base}/api/sessions?type=value&habitId=${h.id}&date=${today}`);
-        const data = await res.json();
-        if (data.value !== null && data.value !== undefined && data.value >= (h.min_value || 0)) done = true;
+        results[h.id] = row ? (row.value ?? 0) >= (h.min_value || 0) : false;
+      } else {
+        results[h.id] = false;
       }
-      results[h.id] = done;
-    });
-    await Promise.all(promises);
+    }
     completedIds = results;
     completedLoaded = true;
   }
