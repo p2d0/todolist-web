@@ -52,5 +52,6 @@ timerStore.stop = async () => {
 		elapsedBefore: 0,
 	});
 	send({ type: "timer:update", data: get(timerStore) });
+	send({ type: "sessions:update" });
 	return elapsed;
 };

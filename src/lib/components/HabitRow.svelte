@@ -23,7 +23,12 @@
 
   onMount(() => {
     buildCircles();
-    return unsub;
+    const onSync = () => updateCircleData();
+    window.addEventListener('sync:sessions', onSync);
+    return () => {
+      unsub();
+      window.removeEventListener('sync:sessions', onSync);
+    };
   });
 
   function buildCircles() {
