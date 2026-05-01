@@ -4,9 +4,11 @@ export const habitsStore = writable([]);
 
 export const weekSummaryStore = writable('');
 
+export const hideCompletedStore = writable(false);
+
 export const timerStore = writable({
   activeHabitId: null,
-  mode: 'stopwatch', // 'timed' or 'stopwatch'
+  mode: 'stopwatch',
   elapsed: 0,
   running: false,
   startTime: null,
