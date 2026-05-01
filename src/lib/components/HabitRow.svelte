@@ -147,7 +147,8 @@
     }));
     send({ type: 'timer:update', data: get(timerStore) });
 
-    updateCircleData();
+    const mins = Math.floor(elapsed / 60);
+    circles = circles.map(c => c.date === date ? { ...c, state: mins > 0 ? 'complete' : 'empty', label: mins > 0 ? `${mins}m` : '' } : c);
   }
 
   function getElapsed() {
@@ -184,7 +185,9 @@
     }
     send({ type: 'sessions:update' });
 
-    updateCircleData();
+    const newState = data.has ? 'empty' : 'complete';
+    const newLabel = data.has ? '' : '✓';
+    circles = circles.map(c => c.date === date ? { ...c, state: newState, label: newLabel } : c);
   }
 
   async function openNumberInput(habit, date) {
