@@ -297,7 +297,7 @@
   /* Calendar layout */
   .calendar {
     display: flex;
-    gap: 6px;
+    gap: 4px;
     align-items: flex-start;
     margin-top: 8px;
   }
@@ -305,16 +305,16 @@
   .calendar-labels {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
     padding-top: 0;
   }
 
   .cal-label {
-    font-size: 10px;
+    font-size: 9px;
     color: #a6adc8;
-    width: 20px;
-    height: 16px;
-    line-height: 16px;
+    width: 14px;
+    height: 10px;
+    line-height: 10px;
     text-align: right;
     flex-shrink: 0;
   }
@@ -326,29 +326,27 @@
   .calendar-grid {
     display: flex;
     flex-direction: row;
-    gap: 4px;
+    gap: 2px;
     flex: 1;
   }
 
   .week-column {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
     flex: 1;
   }
 
   .cal-cell {
     width: 100%;
-    aspect-ratio: 1;
-    border-radius: 3px;
-    min-height: 16px;
-    min-width: 16px;
-    transition: transform 100ms;
+    height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
   }
 
   .cal-cell.empty {
     background: #2a2e3f;
-    opacity: 0.4;
+    opacity: 0.3;
   }
 
   /* Legend */
@@ -356,8 +354,8 @@
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 4px;
-    margin-top: 10px;
+    gap: 3px;
+    margin-top: 8px;
   }
 
   .legend-label {
@@ -366,8 +364,8 @@
   }
 
   .legend-box {
-    width: 12px;
-    height: 12px;
+    width: 10px;
+    height: 10px;
     border-radius: 2px;
   }
 </style>
