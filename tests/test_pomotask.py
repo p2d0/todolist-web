@@ -159,6 +159,38 @@ def find_habit_today(habit_name, occurrence=-1):
     return None
 
 
+def get_all_buttons(habit_name):
+    """Get all 7 day buttons for a habit. Returns list of (day_label, ref)."""
+    lines = get_lines()
+    idx = None
+    for i, line in enumerate(lines):
+        if habit_name in line:
+            idx = i; break
+    if idx is None:
+        return []
+    name_indent = len(lines[idx]) - len(lines[idx].lstrip())
+    circles_indent = name_indent - 2
+    circles_line = None
+    for j in range(idx + 1, len(lines)):
+        nl = lines[j]
+        ni = len(nl) - len(nl.lstrip()) if nl.strip() else 999
+        if ni == circles_indent and "generic [ref=" in nl and nl.strip().startswith("- generic"):
+            circles_line = j; break
+        if ni <= name_indent - 4 and nl.strip(): break
+    if circles_line is None:
+        return []
+    btns = []
+    for j in range(circles_line + 1, len(lines)):
+        nl = lines[j]
+        ni = len(nl) - len(nl.lstrip()) if nl.strip() else 999
+        if "button" in nl and "ref=" in nl and ni > circles_indent:
+            m = re.search(r'button "([^"]+)"', nl)
+            m2 = re.search(r"ref=(e\d+)", nl)
+            btns.append((m.group(1) if m else "?", m2.group(1) if m2 else None))
+        if ni <= circles_indent and nl.strip(): break
+    return btns
+
+
 def pass_test(name):
     global PASS, TOTAL
     TOTAL += 1; PASS += 1
@@ -350,9 +382,46 @@ def main():
         cleanup_habit("Playwright Timer Test")
 
         # =========================
-        # TEST 4: Remove habit
+        # TEST 4: Add time on non-today day
         # =========================
-        print("\nTEST 4: Remove habit")
+        print("\nTEST 4: Add time on non-today day")
+        if add_habit("Playwright Timer Test", "timer"):
+            pass_test("Timer habit added")
+            buttons = get_all_buttons("Playwright Timer Test")
+            if len(buttons) >= 1:
+                monday_name, monday_ref = buttons[0]
+                print(f"    Clicking MONDAY ({monday_name})")
+                cli(f"playwright-cli click {monday_ref}")
+                time.sleep(1); snap()
+                minutes_spin = find_ref('spinbutton "Minutes"')
+                if minutes_spin:
+                    pass_test("TimeEditor opened")
+                    cli(f'playwright-cli fill {minutes_spin} "5"')
+                    time.sleep(0.5)
+                    save_btn = find_ref('button "Save"')
+                    if save_btn:
+                        cli(f"playwright-cli click {save_btn}")
+                        time.sleep(1.5); snap()
+                        buttons2 = get_all_buttons("Playwright Timer Test")
+                        monday_txt = get_button_text(buttons2[0][1])
+                        if monday_txt == "5m":
+                            pass_test("Time saved on Monday")
+                        else:
+                            fail_test(f"Monday circle shows '{monday_txt}' instead of '5m'")
+                    else:
+                        fail_test("Save button not found")
+                else:
+                    fail_test("TimeEditor dialog did not open")
+            else:
+                fail_test("No day buttons found")
+        else:
+            fail_test("Timer habit not visible")
+        cleanup_habit("Playwright Timer Test")
+
+        # =========================
+        # TEST 5: Remove habit
+        # =========================
+        print("\nTEST 5: Remove habit")
         if add_habit("Delete Me Test", "boolean"):
             pass_test("Habit to delete added")
             if delete_habit("Delete Me Test"):

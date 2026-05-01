@@ -26,6 +26,7 @@
       body: JSON.stringify({ habitId, date, durationSeconds: total }),
     });
     send({ type: 'sessions:update' });
+    window.dispatchEvent(new CustomEvent('sync:sessions'));
 
     onSaved();
     onClosed();
@@ -34,6 +35,7 @@
   async function remove() {
     await fetch(`${base}/api/sessions?date=${date}&habitId=${habitId}`, { method: 'DELETE' });
     send({ type: 'sessions:update' });
+    window.dispatchEvent(new CustomEvent('sync:sessions'));
     onSaved();
     onClosed();
   }
