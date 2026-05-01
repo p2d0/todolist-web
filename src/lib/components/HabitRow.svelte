@@ -2,7 +2,7 @@
   import { base } from '$app/paths';
   import { onMount } from 'svelte';
   import dayjs from 'dayjs';
-  import { timerStore } from '$lib/stores/timer.js';
+  import { timerStore, weekDataStore } from '$lib/stores/timer.js';
   import { send } from '$lib/stores/sync.js';
   import { get } from 'svelte/store';
   import TimeEditor from './TimeEditor.svelte';
@@ -20,10 +20,14 @@
   let editingNumber = null;
 
   const unsub = timerStore.subscribe(v => activeTimer = v);
+  const weekDataUnsub = weekDataStore.subscribe(() => updateCircleData());
 
   onMount(() => {
     buildCircles();
-    return unsub;
+    return () => {
+      unsub();
+      weekDataUnsub();
+    };
   });
 
   function buildCircles() {
@@ -46,17 +50,13 @@
     updateCircleData();
   }
 
-  async function updateCircleData() {
-    const startDate = circles[0]?.date;
-    const endDate = circles[circles.length - 1]?.date;
-    if (!startDate || !endDate) return;
-
-    const res = await fetch(`${base}/api/sessions?habitId=${habit.id}&startDate=${startDate}&endDate=${endDate}`);
-    const sessions = await res.json(); // array of { date, duration_seconds, value }
+  function updateCircleData() {
+    const allRows = get(weekDataStore);
+    const habitRows = allRows.filter(r => r.habit_id === habit.id);
     const sessionMap = {};
-    for (const s of sessions) {
-      if (!sessionMap[s.date]) sessionMap[s.date] = [];
-      sessionMap[s.date].push(s);
+    for (const r of habitRows) {
+      if (!sessionMap[r.date]) sessionMap[r.date] = [];
+      sessionMap[r.date].push(r);
     }
 
     const newCircles = [];

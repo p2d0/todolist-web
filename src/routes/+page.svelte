@@ -8,17 +8,30 @@
   import FabButton from '$lib/components/FabButton.svelte';
   import StatsView from '$lib/components/StatsView.svelte';
   import { base } from '$app/paths';
-  import { habitsStore } from '$lib/stores/timer.js';
+  import { habitsStore, weekDataStore } from '$lib/stores/timer.js';
   import { send } from '$lib/stores/sync.js';
+  import dayjs from 'dayjs';
 
   let showAddDialog = false;
   let editingHabit = null;
   let activeTab = 'main';
 
+  function getWeekRange() {
+    const today = dayjs();
+    const dayOfWeek = today.day();
+    const monday = today.subtract((dayOfWeek + 6) % 7, 'day');
+    const sunday = monday.add(6, 'day');
+    return { startDate: monday.format('YYYY-MM-DD'), endDate: sunday.format('YYYY-MM-DD') };
+  }
+
   async function loadHabits() {
     const res = await fetch(`${base}/api/habits`);
     const habits = await res.json();
     habitsStore.set(habits);
+
+    const { startDate, endDate } = getWeekRange();
+    const data = await (await fetch(`${base}/api/sessions?type=weekdata&startDate=${startDate}&endDate=${endDate}`)).json();
+    weekDataStore.set(data.rows);
   }
 
   async function afterAddHabit() {
@@ -34,8 +47,13 @@
   onMount(() => {
     loadHabits();
     const onHabitsSync = () => loadHabits();
+    const onSessionsSync = () => loadHabits();
     window.addEventListener('sync:habits', onHabitsSync);
-    return () => window.removeEventListener('sync:habits', onHabitsSync);
+    window.addEventListener('sync:sessions', onSessionsSync);
+    return () => {
+      window.removeEventListener('sync:habits', onHabitsSync);
+      window.removeEventListener('sync:sessions', onSessionsSync);
+    };
   });
 </script>
 

@@ -8,6 +8,7 @@ import {
 	getSessions,
 	getTotalMinutes,
 	getValueForDate,
+	getWeekDataForAllHabits,
 	hasSession,
 	setValueForDate,
 } from "$lib/server/db";
@@ -18,6 +19,11 @@ export const GET = (async ({ url }) => {
 	const endDate = url.searchParams.get("endDate");
 	const date = url.searchParams.get("date");
 	const type = url.searchParams.get("type");
+
+	if (type === "weekdata") {
+		const rows = getWeekDataForAllHabits(startDate, endDate);
+		return json({ rows });
+	}
 
 	if (type === "value") {
 		const val = getValueForDate(habitId, date);

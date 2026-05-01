@@ -154,6 +154,15 @@ export function setValueForDate(habitId, date, value) {
 	).run(habitId, date, now, value);
 }
 
+export function getWeekDataForAllHabits(startDate, endDate) {
+	const db = getDb();
+	return db
+		.prepare(
+			"SELECT habit_id, date, COALESCE(SUM(duration_seconds), 0) as duration_seconds, value FROM sessions WHERE date >= ? AND date <= ? GROUP BY habit_id, date ORDER BY habit_id, date",
+		)
+		.all(startDate, endDate);
+}
+
 export function getValueForDate(habitId, date) {
 	const db = getDb();
 	const row = db
@@ -232,9 +241,7 @@ export function getStreak(habitId) {
 
 	for (const row of rows) {
 		const rowDate = new Date(row.date + "T00:00:00");
-		const diff = Math.floor(
-			(current - rowDate) / (1000 * 60 * 60 * 24),
-		);
+		const diff = Math.floor((current - rowDate) / (1000 * 60 * 60 * 24));
 		if (diff === streak) {
 			streak++;
 			current = new Date(rowDate);
