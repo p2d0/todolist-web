@@ -164,6 +164,76 @@ export function getValueForDate(habitId, date) {
 	return row?.value ?? null;
 }
 
+// --- Monthly Stats ---
+
+export function getMonthlyMinutes(habitId, month) {
+	const db = getDb();
+	const row = db
+		.prepare(
+			"SELECT COALESCE(SUM(duration_seconds), 0) as total FROM sessions WHERE habit_id = ? AND date LIKE ?",
+		)
+		.get(habitId, `${month}-%`);
+	return Math.floor(row.total / 60);
+}
+
+export function getMonthlyCompletions(habitId, month) {
+	const db = getDb();
+	const row = db
+		.prepare(
+			"SELECT COUNT(DISTINCT date) as cnt FROM sessions WHERE habit_id = ? AND date LIKE ?",
+		)
+		.get(habitId, `${month}-%`);
+	return row.cnt;
+}
+
+export function getMonthlyDailyData(habitId, month, daysInMonth) {
+	const db = getDb();
+	const daily = [];
+	for (let day = 1; day <= daysInMonth; day++) {
+		const date = `${month}-${String(day).padStart(2, "0")}`;
+		const row = db
+			.prepare(
+				"SELECT COALESCE(SUM(duration_seconds), 0) as total FROM sessions WHERE habit_id = ? AND date = ?",
+			)
+			.get(habitId, date);
+		daily.push(row.total);
+	}
+	return daily;
+}
+
+export function getStreak(habitId) {
+	const db = getDb();
+	const rows = db
+		.prepare(
+			"SELECT DISTINCT date FROM sessions WHERE habit_id = ? ORDER BY date DESC",
+		)
+		.all(habitId);
+	if (rows.length === 0) return 0;
+
+	let streak = 0;
+	let current = new Date();
+	current.setHours(0, 0, 0, 0);
+
+	for (const row of rows) {
+		const rowDate = new Date(row.date + "T00:00:00");
+		const diff = Math.floor(
+			(current - rowDate) / (1000 * 60 * 60 * 24),
+		);
+		if (diff === streak) {
+			streak++;
+			current = new Date(rowDate);
+			current.setDate(current.getDate() - 1);
+		} else if (diff === 0 && streak === 0) {
+			streak = 1;
+			current = new Date(rowDate);
+			current.setDate(current.getDate() - 1);
+		} else {
+			break;
+		}
+	}
+	return streak;
+}
+
 // --- Week Summary ---
 
 export function getWeekSummary(habitId) {

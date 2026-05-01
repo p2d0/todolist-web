@@ -4,7 +4,6 @@
   import { onMount } from 'svelte';
 
   export let habitsStore;
-  export let onAdd;
   export let onEdit = null;
   export let onDelete = null;
 
@@ -44,10 +43,6 @@
   </div>
 </div>
 
-<button class="add-btn" on:click={onAdd}>
-  + Add Habit
-</button>
-
 <style>
   .habit-list {
     flex: 1;
@@ -62,24 +57,5 @@
     flex: 1;
     overflow-y: auto;
     min-height: 0;
-  }
-
-  .add-btn {
-    width: 100%;
-    padding: 14px;
-    margin: 8px 0;
-    border: none;
-    border-radius: 12px;
-    background: #363a4f;
-    color: #a6adc8;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 150ms;
-  }
-
-  .add-btn:hover {
-    background: #454a60;
-    color: #cdd6f4;
   }
 </style>
