@@ -45,8 +45,10 @@
     return max;
   }
 
-  function getIntensity(value, max) {
+  function getIntensity(value, max, habitType) {
     if (!max || value <= 0) return 0;
+    if (habitType === 'timer' && value < 1500) return 1;
+    if (habitType === 'boolean') return value > 0 ? 4 : 0;
     const pct = value / max;
     if (pct > 0.75) return 4;
     if (pct > 0.5) return 3;
@@ -63,6 +65,11 @@
       case 4: return '#a6e3a1';
       default: return '#2a2e3f';
     }
+  }
+
+  function cellOpacity(value, habitType) {
+    if (habitType === 'timer' && value > 0 && value < 1500) return 0.4;
+    return 1;
   }
 
   function buildMultiMonthGrid(monthlyData) {
@@ -182,8 +189,8 @@
                         {@const value = daily[cell.day - 1] || 0}
                         <td
                           class="cal-cell"
-                          style="background: {intensityColor(getIntensity(value, maxValue))}"
-                          title="{cell.month}-{String(cell.day).padStart(2, '0')}: {value}"
+                          style="background: {intensityColor(getIntensity(value, maxValue, habit.type))}; opacity: {cellOpacity(value, habit.type)}"
+                          title="{cell.month}-{String(cell.day).padStart(2, '0')}: {habit.type === 'timer' ? Math.floor(value / 60) + 'm' : value}"
                         ></td>
                       {:else}
                         <td class="cal-cell empty"></td>
