@@ -1,16 +1,56 @@
-import { writable } from 'svelte/store';
+import dayjs from "dayjs";
+import { get, writable } from "svelte/store";
+import { base } from "$app/paths";
+import { send } from "./sync.js";
 
 export const habitsStore = writable([]);
 
-export const weekSummaryStore = writable('');
+export const weekSummaryStore = writable("");
 
 export const hideCompletedStore = writable(false);
 
 export const timerStore = writable({
-  activeHabitId: null,
-  mode: 'stopwatch',
-  elapsed: 0,
-  running: false,
-  startTime: null,
-  elapsedBefore: 0,
+	activeHabitId: null,
+	mode: "stopwatch",
+	elapsed: 0,
+	running: false,
+	startTime: null,
+	elapsedBefore: 0,
 });
+
+timerStore.stop = async () => {
+	const state = get(timerStore);
+	if (!state) return;
+	const elapsed = state.startTime
+		? Math.floor((Date.now() - state.startTime) / 1000) + state.elapsedBefore
+		: state.elapsedBefore || 0;
+
+	const habits = get(habitsStore);
+	const habit = habits.find((h) => h.id === state.activeHabitId);
+	if (habit) {
+		try {
+			await fetch(`${base}/api/sessions`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					habitId: habit.id,
+					date: dayjs().format("YYYY-MM-DD"),
+					durationSeconds: elapsed,
+				}),
+			});
+		} catch (e) {
+			console.error("Failed to save session:", e);
+		}
+	}
+
+	timerStore.set({
+		activeHabitId: null,
+		mode: state.mode,
+		elapsed: 0,
+		running: false,
+		startTime: null,
+		elapsedBefore: 0,
+	});
+	send({ type: "timer:update", data: get(timerStore) });
+	return elapsed;
+};

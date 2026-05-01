@@ -1,7 +1,8 @@
 import { H as HttpError, j as json, t as text, S as SvelteKitError, R as Redirect, e as error, A as ActionFailure, i as isRedirect } from './chunks/index-DVtGy7I0.js';
-import { w as with_request_store, t as text_decoder, b as base64_decode, a as afterUpdate, d as decode_pathname, n as normalize_path, c as disable_search, e as decode_params, v as validate_layout_server_exports, f as validate_layout_exports, g as validate_page_server_exports, h as validate_page_exports, i as text_encoder, r as resolve, m as make_trackable, j as get_relative_path, k as base64_encode } from './chunks/ssr2-DH0Db1X5.js';
-import { r as readable, w as writable } from './chunks/index-DF-YXlAm.js';
-import { c as create_ssr_component, s as setContext, v as validate_component, m as missing_component } from './chunks/ssr-CveG98s7.js';
+import { w as with_request_store, c as create_ssr_component, s as setContext, v as validate_component, m as missing_component, d as decode_pathname, n as normalize_path, a as disable_search, b as decode_params, r as resolve, e as make_trackable } from './chunks/ssr-BpvsA4sr.js';
+import { t as text_decoder, b as base64_decode, a as afterUpdate, v as validate_layout_server_exports, c as validate_layout_exports, d as validate_page_server_exports, e as validate_page_exports, f as text_encoder, g as base64_encode, h as get_relative_path } from './chunks/exports-BU616ZMK.js';
+import { b as base, a as app_dir, c as assets, r as relative, o as override, d as reset } from './chunks/server-vJ6ilggy.js';
+import { r as readable, w as writable } from './chunks/index-BHxW_2Zu.js';
 
 /**
  * @template {{ tracing: { enabled: boolean, root: import('@opentelemetry/api').Span, current: import('@opentelemetry/api').Span } }} T
@@ -1961,20 +1962,6 @@ function split_remote_key(key) {
   };
 }
 
-let base = "";
-let assets = base;
-const app_dir = "_app";
-const relative = true;
-const initial = { base, assets };
-function override(paths) {
-  base = paths.base;
-  assets = paths.assets;
-}
-function reset() {
-  base = initial.base;
-  assets = initial.assets;
-}
-
 let public_env = {};
 function set_private_env(environment) {
 }
@@ -2083,7 +2070,7 @@ const options = {
   service_worker_options: void 0,
   server_error_boundaries: false,
   templates: {
-    app: ({ head, body, assets, nonce, env }) => '<!doctype html>\n<html lang="en">\n  <head>\n    <meta charset="utf-8" />\n    <meta name="viewport" content="width=device-width, initial-scale=1" />\n    <link rel="icon" href="/favicon.png" />\n    <title>PomoTasker</title>\n    ' + head + '\n  </head>\n  <body data-sveltekit-preload-data="hover">\n    <div style="display: contents">' + body + "</div>\n  </body>\n</html>\n",
+    app: ({ head, body, assets, nonce, env }) => '<!doctype html>\n<html lang="en">\n  <head>\n    <meta charset="utf-8" />\n    <meta name="viewport" content="width=device-width, initial-scale=1" />\n    <link rel="icon" href="' + assets + '/favicon.png" />\n    <style>*, *::before, *::after { box-sizing: border-box; } html, body { margin: 0; padding: 0; height: 100%; }</style>\n    <title>PomoTasker</title>\n    ' + head + '\n  </head>\n  <body data-sveltekit-preload-data="hover">\n    <div style="display: contents; margin: 0">' + body + "</div>\n  </body>\n</html>\n",
     error: ({ status, message }) => '<!doctype html>\n<html lang="en">\n	<head>\n		<meta charset="utf-8" />\n		<title>' + message + `</title>
 
 		<style>
@@ -2155,7 +2142,7 @@ const options = {
 		<div class="error">
 			<span class="status">` + status + '</span>\n			<div class="message">\n				<h1>' + message + "</h1>\n			</div>\n		</div>\n	</body>\n</html>\n"
   },
-  version_hash: "17l2b19"
+  version_hash: "1vttifk"
 };
 async function get_hooks() {
   let handle;

@@ -4,13 +4,11 @@
   import { send } from '$lib/stores/sync.js';
   import { get } from 'svelte/store';
   export let habitsStore;
-  import dayjs from 'dayjs';
   import { onMount } from 'svelte';
 
   let activeTimer = null;
   let habits = [];
   let displayText = '0.0 pomodoros';
-  let btnText = 'Start';
   let modeBtnText = 'S';
 
   let timerInterval = null;
@@ -44,17 +42,6 @@
     }
   }
 
-  function showStartNotif(habit) {
-    const mode = activeTimer?.mode || habit.mode || 'stopwatch';
-    showNotif('PomoTasker', {
-      body: `Timer started: ${habit.description} (${mode} mode)`,
-      icon: `${base}/icons/icon-192.png`,
-      tag: 'timer-start',
-      vibrate: [200],
-      data: { type: 'timer-start' },
-    });
-  }
-
   function showStopNotif(habit, elapsed) {
     const mins = Math.floor(elapsed / 60);
     const secs = elapsed % 60;
@@ -69,11 +56,6 @@
 
   const tUnsub = timerStore.subscribe(v => {
     activeTimer = v;
-    if (v.running) {
-      btnText = 'Stop';
-    } else {
-      btnText = 'Start';
-    }
     modeBtnText = v.mode === 'timed' ? 'P' : 'S';
   });
 
@@ -127,63 +109,13 @@
     return Math.floor((Date.now() - activeTimer.startTime) / 1000) + activeTimer.elapsedBefore;
   }
 
-  function handleStartStop() {
-    if (activeTimer?.running) {
-      stopTimer();
-      return;
-    }
-
-    // If no active habit, use first timer-type habit
-    let habit = habits.find(h => h.id === activeTimer?.activeHabitId);
-    if (!habit) {
-      habit = habits.find(h => h.habit_type === 'timer');
-    }
-    if (!habit) return;
-
-    // Request notification permission first (must be in user gesture)
-    requestNotifPermission();
-
-    const mode = activeTimer?.mode || habit.mode || 'stopwatch';
-    timerStore.update(v => ({
-      ...v,
-      activeHabitId: habit.id,
-      mode,
-      running: true,
-      startTime: Date.now(),
-      elapsedBefore: 0,
-    }));
-    send({ type: 'timer:update', data: get(timerStore) });
-    showStartNotif(habit);
-  }
-
-  function stopTimer() {
+  async function stopTimer() {
     if (!activeTimer) return;
-    const elapsed = getElapsed();
     const habit = habits.find(h => h.id === activeTimer.activeHabitId);
-    const date = dayjs().format('YYYY-MM-DD');
-
+    const elapsed = await timerStore.stop();
     if (habit) {
       showStopNotif(habit, elapsed);
-      fetch(`${base}/api/sessions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          habitId: habit.id,
-          date,
-          durationSeconds: elapsed,
-        }),
-      });
     }
-
-    timerStore.update(v => ({
-      ...v,
-      activeHabitId: null,
-      running: false,
-      startTime: null,
-      elapsedBefore: 0,
-      elapsed: 0,
-    }));
-    send({ type: 'timer:update', data: get(timerStore) });
   }
 
   function toggleMode() {
@@ -224,7 +156,6 @@
   <div class="timer-controls">
     <button class="mode-btn" on:click={toggleMode}>{modeBtnText}</button>
     <button class="notif-btn" on:click={requestNotifPermission} title="Enable notifications">{notifIcon}</button>
-    <button class="action-btn" class:active={isActive} on:click={handleStartStop}>{btnText}</button>
   </div>
 </div>
 
@@ -294,25 +225,5 @@
     background: #454a60;
   }
 
-  .action-btn {
-    flex: 1;
-    border: none;
-    border-radius: 12px;
-    padding: 8px 16px;
-    font-size: 13px;
-    font-weight: bold;
-    background: #b4befe;
-    color: #1e1e2e;
-    cursor: pointer;
-    transition: background 150ms, box-shadow 150ms;
-  }
 
-  .action-btn.active {
-    background: #cba6f7;
-    box-shadow: 0 0 12px rgba(203, 166, 247, 0.4);
-  }
-
-  .action-btn:hover {
-    background: #c5cae9;
-  }
 </style>

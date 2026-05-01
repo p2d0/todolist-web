@@ -1,0 +1,18 @@
+- main [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e7]: 0.0 pomodoros
+      - generic [ref=e8]:
+        - button "S" [ref=e9] [cursor=pointer]
+        - button "🔔?" [ref=e10] [cursor=pointer]
+        - button "Start" [ref=e11] [cursor=pointer]
+    - button "🙈 Hide done" [ref=e14] [cursor=pointer]
+  - button "Add habit" [ref=e16] [cursor=pointer]:
+    - img [ref=e17]
+  - navigation [ref=e20]:
+    - button "Main" [ref=e21] [cursor=pointer]:
+      - img [ref=e22]
+      - generic [ref=e26]: Main
+    - button "Statistics" [ref=e27] [cursor=pointer]:
+      - img [ref=e28]
+      - generic [ref=e32]: Statistics
