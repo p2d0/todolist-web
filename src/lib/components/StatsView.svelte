@@ -116,21 +116,26 @@
 
           <!-- GitHub-style contribution calendar -->
           <div class="calendar-wrapper">
-            <div class="calendar-grid">
-              {#each dayLabels as label, i}
-                <div class="day-label">{label[0]}</div>
-                {#each grid as week}
-                  {@const cell = week[i]}
-                  {#if cell}
-                    <div
-                      class="calendar-cell"
-                      style="background: {intensityColor(getIntensity(cell.value, maxValue))}"
-                      title="{stats.month}-{String(cell.day).padStart(2, '0')}: {cell.value}"
-                    ></div>
-                  {:else}
-                    <div class="calendar-cell empty"></div>
-                  {/if}
+            <div class="calendar-body">
+              <div class="day-labels">
+                {#each dayLabels as label}
+                  <div class="day-label">{label[0]}</div>
                 {/each}
+              </div>
+              {#each grid as week}
+                <div class="week-col">
+                  {#each week as cell}
+                    {#if cell}
+                      <div
+                        class="calendar-cell"
+                        style="background: {intensityColor(getIntensity(cell.value, maxValue))}"
+                        title="{stats.month}-{String(cell.day).padStart(2, '0')}: {cell.value}"
+                      ></div>
+                    {:else}
+                      <div class="calendar-cell empty"></div>
+                    {/if}
+                  {/each}
+                </div>
               {/each}
             </div>
           </div>
@@ -272,30 +277,41 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  .calendar-grid {
-    display: grid;
-    grid-template-columns: 24px repeat(auto-fit, minmax(0, 1fr));
-    grid-auto-flow: column;
+  .calendar-body {
+    display: flex;
     gap: 3px;
-    min-width: 0;
+    padding: 4px 0;
+  }
+
+  .day-labels {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-right: 4px;
+    padding-top: 0;
   }
 
   .day-label {
-    font-size: 10px;
+    font-size: 9px;
     color: #6c7086;
-    text-align: center;
-    line-height: 12px;
+    width: 14px;
     height: 12px;
+    line-height: 12px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .week-col {
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
+    gap: 3px;
   }
 
   .calendar-cell {
     width: 12px;
     height: 12px;
     border-radius: 2px;
-    min-width: 12px;
+    flex-shrink: 0;
   }
 
   .calendar-cell.empty {
