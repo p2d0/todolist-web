@@ -6,7 +6,7 @@ import {
 	deleteSessionsForDate,
 	getSessionForDate,
 	getSessions,
-	getTotalMinutes,
+	getTotalSeconds,
 	getValueForDate,
 	getWeekDataForAllHabits,
 	hasSession,
@@ -30,9 +30,9 @@ export const GET = (async ({ url }) => {
 		return json({ value: val });
 	}
 
-	if (type === "minutes") {
-		const mins = getTotalMinutes(habitId, date);
-		return json({ minutes: mins });
+	if (type === "seconds") {
+		const secs = getTotalSeconds(habitId, date);
+		return json({ durationSeconds: secs });
 	}
 
 	if (type === "has") {
