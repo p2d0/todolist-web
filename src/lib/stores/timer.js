@@ -55,5 +55,6 @@ timerStore.stop = async () => {
 	});
 	send({ type: "timer:update", data: get(timerStore) });
 	send({ type: "sessions:update" });
+	window.dispatchEvent(new CustomEvent("sync:sessions"));
 	return elapsed;
 };
