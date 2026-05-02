@@ -5,9 +5,9 @@
   "private": true,
   "scripts": {
     "dev": "vite dev --host",
-    "build": "svelte-kit sync && vite build",
-    "build:android": "svelte-kit sync && vite build && npx cap sync android",
-    "preview": "env -u NODE_OPTIONS -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy node build/index.js"
+    "build": "svelte-kit sync && vite build && node scripts/build-android.mjs",
+    "build:android": "npm run build && npx cap sync android",
+    "preview": "node build/index.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",
