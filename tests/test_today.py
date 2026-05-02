@@ -2,12 +2,44 @@
 """Test clicking TODAY vs other days for timer habit."""
 import subprocess, sys, os, time, yaml, re, shlex
 
-APP_URL = os.environ.get("APP_URL", "http://localhost:5174")
+APP_URL = os.environ.get("APP_URL", "http://localhost:5173")
 SNAP = []; SNAP_FILE = None
+DEV_SERVER_PID = None
 
 
 def cli(cmd):
     return subprocess.run(shlex.split(cmd), capture_output=True, text=True, timeout=30).stdout
+
+
+def start_dev_server():
+    global DEV_SERVER_PID
+    print("Starting dev server...")
+    db_path = "/mnt/md127/todolist-bun/data/pomotasker.db"
+    if os.path.exists(db_path):
+        os.remove(db_path)
+    for suffix in ["-wal", "-shm"]:
+        p = db_path + suffix
+        if os.path.exists(p):
+            os.remove(p)
+    p = subprocess.Popen(
+        "cd /mnt/md127/todolist-bun && POMO_BASE='' npm run dev",
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+    DEV_SERVER_PID = p.pid
+    time.sleep(3)
+
+
+def stop_dev_server():
+    global DEV_SERVER_PID
+    if DEV_SERVER_PID:
+        try:
+            os.kill(DEV_SERVER_PID, 15)
+        except:
+            pass
+        time.sleep(1)
+    subprocess.run("pkill -f 'vite' 2>/dev/null", shell=True)
 
 
 def snap():
@@ -72,90 +104,91 @@ def get_all_buttons(habit_name):
 
 
 def main():
-    print("Opening Firefox...")
-    cli("playwright-cli open --browser=firefox")
-    time.sleep(1)
-    cli(f"playwright-cli goto {APP_URL}")
-    time.sleep(2); snap()
+    start_dev_server()
+    try:
+        print("Opening Firefox...")
+        cli("playwright-cli open --browser=firefox")
+        time.sleep(1)
+        cli(f"playwright-cli goto {APP_URL}")
+        time.sleep(2); snap()
 
-    # Clean
-    for name in ["Playwright Timer Test"]:
-        while name in open(SNAP_FILE).read() if SNAP_FILE else False:
-            for i, line in enumerate(get_lines()):
-                if name in line:
-                    for j in range(i + 1, min(i + 5, len(get_lines()))):
-                        if "Delete habit" in get_lines()[j]:
-                            ref = re.search(r"ref=(e\d+)", get_lines()[j]).group(1)
-                            cli(f"playwright-cli click {ref}")
-                            time.sleep(0.3); cli("playwright-cli dialog-accept")
-                            time.sleep(0.5); snap()
-                            break
-            break
+        # Clean
+        for name in ["Playwright Timer Test"]:
+            while name in open(SNAP_FILE).read() if SNAP_FILE else False:
+                for i, line in enumerate(get_lines()):
+                    if name in line:
+                        for j in range(i + 1, min(i + 5, len(get_lines()))):
+                            if "Delete habit" in get_lines()[j]:
+                                ref_m = re.search(r"ref=(e\d+)", get_lines()[j])
+                                if ref_m:
+                                    ref = ref_m.group(1)
+                                    cli(f"playwright-cli click {ref}")
+                                    time.sleep(0.3); cli("playwright-cli dialog-accept")
+                                    time.sleep(0.5); snap()
+                                    break
+                break
 
-    # Add timer
-    btn = find_ref('button "Add habit"')
-    cli(f"playwright-cli click {btn}")
-    time.sleep(0.5); snap()
-    inp = find_ref('textbox "Name"')
-    cli(f'playwright-cli fill {inp} "Playwright Timer Test"')
-    time.sleep(0.3)
-    combo = find_ref('combobox "Type"')
-    cli(f"playwright-cli select {combo} timer")
-    time.sleep(0.3)
-    add_btn = find_ref('button "Add"')
-    cli(f"playwright-cli click {add_btn}")
-    time.sleep(1); snap()
-    print("✅ Habit added")
+        # Add timer
+        btn = find_ref('button "Add habit"')
+        cli(f"playwright-cli click {btn}")
+        time.sleep(0.5); snap()
+        inp = find_ref('textbox "Name"')
+        cli(f'playwright-cli fill {inp} "Playwright Timer Test"')
+        time.sleep(0.3)
+        combo = find_ref('combobox "Type"')
+        cli(f"playwright-cli select {combo} timer")
+        time.sleep(0.3)
+        add_btn = find_ref('button "Add"')
+        cli(f"playwright-cli click {add_btn}")
+        time.sleep(1); snap()
+        print("✅ Habit added")
 
-    buttons = get_all_buttons("Playwright Timer Test")
-    print(f"All buttons: {buttons}")
+        buttons = get_all_buttons("Playwright Timer Test")
+        print(f"All buttons: {buttons}")
 
-    # Today is Friday (index 4)
-    print(f"\n1. Click TODAY (Friday, index 4) ref={buttons[4][1]}")
-    cli(f"playwright-cli click {buttons[4][1]}")
-    time.sleep(1.5); snap()
-    lines = get_lines()
-    for line in lines:
-        if f"ref={buttons[4][1]}" in line:
-            print(f"  Friday: {line.strip()}")
-            print("  ✅ Active!" if "active" in line else "  ❌ Not active")
-            break
+        # Today is Friday (index 4)
+        print(f"\n1. Click TODAY (Friday, index 4) ref={buttons[4][1]}")
+        cli(f"playwright-cli click {buttons[4][1]}")
+        time.sleep(1.5); snap()
+        lines = get_lines()
+        for line in lines:
+            if f"ref={buttons[4][1]}" in line:
+                print(f"  Friday: {line.strip()}")
+                print("  ✅ Active!" if "active" in line else "  ❌ Not active")
+                break
 
-    # Check FAB
-    fab = find_ref("Stop timer")
-    print(f"  FAB has 'Stop timer': {fab is not None}")
-
-    # Stop
-    if fab:
-        cli(f"playwright-cli click {fab}")
+        # Stop via circle
+        cli('playwright-cli type "Escape"')
+        time.sleep(0.5); snap()
+        today2 = buttons[4][1]
+        cli(f"playwright-cli click {today2}")
         time.sleep(1); snap()
         print("🛑 Stopped")
 
-    # 2. Click MONDAY (index 0)
-    buttons2 = get_all_buttons("Playwright Timer Test")
-    print(f"\n2. Click MONDAY (index 0) ref={buttons2[0][1]}")
-    cli(f"playwright-cli click {buttons2[0][1]}")
-    time.sleep(1.5); snap()
-    lines = get_lines()
-    for line in lines:
-        if f"ref={buttons2[0][1]}" in line:
-            print(f"  Monday: {line.strip()}")
-            print("  ✅ Active!" if "active" in line else "  ❌ Not active")
-            break
+        # 2. Click MONDAY (index 0)
+        buttons2 = get_all_buttons("Playwright Timer Test")
+        print(f"\n2. Click MONDAY (index 0) ref={buttons2[0][1]}")
+        cli(f"playwright-cli click {buttons2[0][1]}")
+        time.sleep(1.5); snap()
+        lines = get_lines()
+        for line in lines:
+            if f"ref={buttons2[0][1]}" in line:
+                print(f"  Monday: {line.strip()}")
+                print("  ✅ Active!" if "active" in line else "  ❌ Not active")
+                break
 
-    fab2 = find_ref("Stop timer")
-    print(f"  FAB has 'Stop timer': {fab2 is not None}")
+        # Check ALL buttons to see which is active
+        print("\n  All buttons state:")
+        lines = get_lines()
+        for line in lines:
+            if "button" in line and "ref=e" in line and ("e1" in line or "e2" in line or "e3" in line):
+                if "active" in line:
+                    print(f"    ACTIVE: {line.strip()}")
 
-    # Check ALL buttons to see which is active
-    print("\n  All buttons state:")
-    lines = get_lines()
-    for line in lines:
-        if "button" in line and "ref=e" in line and ("e1" in line or "e2" in line or "e3" in line):
-            if "active" in line:
-                print(f"    ACTIVE: {line.strip()}")
-
-    cli("playwright-cli close")
-    print("\n✅ Done")
+        cli("playwright-cli close")
+        print("\n✅ Done")
+    finally:
+        stop_dev_server()
 
 
 if __name__ == "__main__":

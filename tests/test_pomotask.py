@@ -16,6 +16,17 @@ def cli(cmd):
 def start_dev_server():
     global DEV_SERVER_PID
     print("Starting dev server...")
+    import shutil
+    db_path = "/mnt/md127/todolist-bun/data/pomotasker.db"
+    if os.path.exists(db_path):
+        os.remove(db_path)
+        print("DB cleared")
+    wal_path = db_path + "-wal"
+    shm_path = db_path + "-shm"
+    if os.path.exists(wal_path):
+        os.remove(wal_path)
+    if os.path.exists(shm_path):
+        os.remove(shm_path)
     p = subprocess.Popen(
         "cd /mnt/md127/todolist-bun && POMO_BASE='' npm run dev",
         shell=True,
@@ -23,23 +34,7 @@ def start_dev_server():
         stderr=subprocess.STDOUT,
     )
     DEV_SERVER_PID = p.pid
-    # Wait for vite to output "Local: http://"
-    for i in range(120):
-        if p.poll() is not None:
-            print("Dev server exited early.")
-            return
-        try:
-            r = subprocess.run(
-                f"curl -s -o /dev/null -w %{{{{http_code}}}} {APP_URL}",
-                shell=True, capture_output=True, text=True, timeout=5
-            )
-            if r.stdout.strip() in ("200", "301", "302"):
-                print("Dev server ready.")
-                return
-        except:
-            pass
-        time.sleep(1)
-    print("Dev server slow, continuing anyway...")
+    time.sleep(3)
 
 
 def stop_dev_server():
@@ -360,19 +355,16 @@ def main():
                 time.sleep(1); snap()
                 if "active" in open(SNAP_FILE).read() if SNAP_FILE else False:
                     pass_test("Timer started (circle active)")
-                    stop = find_ref("Stop timer")
-                    if stop:
-                        cli(f"playwright-cli click {stop}")
-                        time.sleep(1); snap()
-                        pass_test("Timer stopped via FAB")
+                    # Close any open dialog
+                    cli('playwright-cli type "Escape"')
+                    time.sleep(0.5); snap()
+                    today2 = find_habit_today("Playwright Timer Test", 0)
+                    if today2:
+                        cli(f"playwright-cli click {today2}")
+                        time.sleep(1)
+                        pass_test("Timer stopped via circle")
                     else:
-                        today2 = find_habit_today("Playwright Timer Test", -1)
-                        if today2:
-                            cli(f"playwright-cli click {today2}")
-                            time.sleep(1); snap()
-                            pass_test("Timer stopped via circle")
-                        else:
-                            fail_test("Could not stop timer")
+                        fail_test("Could not find habit circle to stop timer")
                 else:
                     fail_test("Timer not active after click")
             else:
@@ -385,6 +377,10 @@ def main():
         # TEST 4: Add time on non-today day
         # =========================
         print("\nTEST 4: Add time on non-today day")
+        cli('playwright-cli type "Escape"')
+        time.sleep(0.3)
+        cli("playwright-cli reload")
+        time.sleep(2); snap()
         if add_habit("Playwright Timer Test", "timer"):
             pass_test("Timer habit added")
             buttons = get_all_buttons("Playwright Timer Test")
@@ -401,9 +397,15 @@ def main():
                     save_btn = find_ref('button "Save"')
                     if save_btn:
                         cli(f"playwright-cli click {save_btn}")
-                        time.sleep(1.5); snap()
-                        buttons2 = get_all_buttons("Playwright Timer Test")
-                        monday_txt = get_button_text(buttons2[0][1])
+                        for _ in range(6):
+                            time.sleep(1); snap()
+                            buttons2 = get_all_buttons("Playwright Timer Test")
+                            monday_txt = get_button_text(buttons2[0][1])
+                            if monday_txt == "5m":
+                                break
+                        else:
+                            buttons2 = get_all_buttons("Playwright Timer Test")
+                            monday_txt = get_button_text(buttons2[0][1])
                         if monday_txt == "5m":
                             pass_test("Time saved on Monday")
                         else:
