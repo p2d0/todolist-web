@@ -17,6 +17,7 @@
   let draggedHabit = null;
   let dropTarget = null;
   let dropAfter = false;
+  let dropProcessed = false;
 
   onMount(() => {
     mounted = true;
@@ -105,13 +106,25 @@
   }
 
   function handleDragEnd() {
+    // If drop didn't fire (released outside wrapper) but we have a target, use it
+    if (!dropProcessed && draggedHabit && dropTarget) {
+      dropProcessed = false;
+      doReorder();
+    }
     draggedHabit = null;
     dropTarget = null;
   }
 
   async function handleDrop(habit, event) {
     event.preventDefault();
-    if (!draggedHabit || !dropTarget || draggedHabit.id === habit.id) return;
+    if (!draggedHabit || draggedHabit.id === habit.id) return;
+    dropProcessed = true;
+    await doReorder();
+  }
+
+  async function doReorder() {
+    const habit = dropTarget;
+    if (!draggedHabit || draggedHabit.id === habit.id) return;
     const oldIndex = visibleHabits.findIndex(h => h.id === draggedHabit.id);
     const newIndex = visibleHabits.findIndex(h => h.id === habit.id);
     if (oldIndex === -1 || newIndex === -1) return;
@@ -154,18 +167,24 @@
   {/if}
   <div class="habit-list-inner">
     {#each visibleHabits as habit (habit.id)}
+        {#if draggedHabit && dropTarget && dropTarget.id === habit.id && !dropAfter}
+          <div class="drop-ghost">{draggedHabit.description}</div>
+        {/if}
       <div class="habit-wrapper"
         class:dragging={draggedHabit && draggedHabit.id === habit.id}
         class:drop-target={dropTarget && dropTarget.id === habit.id}
         draggable={true}
         on:dragstart={(e) => handleDragStart(habit, e)}
         on:dragend={handleDragEnd}
-        on:dragover={(e) => handleDragOver(habit, e)}
-        on:drop={(e) => handleDrop(habit, e)}
+        on:dragover|capture={(e) => handleDragOver(habit, e)}
+        on:drop|capture={(e) => handleDrop(habit, e)}
         aria-label={`Drag to reorder - ${habit.description}`}>
         <HabitRow {habit} {onEdit} {onDelete} />
         {#if draggedHabit && draggedHabit.id === habit.id}
           <div class="drag-ghost"></div>
+        {/if}
+        {#if draggedHabit && dropTarget && dropTarget.id === habit.id && dropAfter}
+          <div class="drop-ghost">{draggedHabit.description}</div>
         {/if}
       </div>
     {/each}
@@ -235,6 +254,10 @@
     opacity: 0.25;
   }
 
+  .habit-wrapper.dragging {
+    opacity: 0.25;
+  }
+
   .habit-wrapper.drop-target {
     background: rgba(180, 190, 254, 0.08);
   }
@@ -247,5 +270,17 @@
     background: #b4befe;
     border-radius: 8px;
     border: 1px solid rgba(180, 190, 254, 0.3);
+  }
+
+  .drop-ghost {
+    padding: 8px 12px;
+    margin: 4px 0;
+    background: rgba(180, 190, 254, 0.1);
+    border: 1px dashed rgba(180, 190, 254, 0.4);
+    border-radius: 8px;
+    color: #b4befe;
+    font-size: 14px;
+    pointer-events: none;
+    opacity: 0.7;
   }
 </style>
