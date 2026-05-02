@@ -32,3 +32,9 @@ server.key
 
 # Generated build
 static/build/
+
+# Capacitor / Android
+android/
+capacitor.config.json
+www/
+

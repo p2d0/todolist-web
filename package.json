@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite dev --host",
     "build": "svelte-kit sync && vite build",
+    "build:android": "svelte-kit sync && vite build && npx cap sync android",
     "preview": "env -u NODE_OPTIONS -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy node build/index.js"
   },
   "devDependencies": {
@@ -18,6 +19,11 @@
     "vite": "^5.4.0"
   },
   "dependencies": {
+    "@capacitor/android": "^8.3.1",
+    "@capacitor/cli": "^8.3.1",
+    "@capacitor/core": "^8.3.1",
+    "@capawesome-team/capacitor-android-foreground-service": "^8.1.0",
+    "@sveltejs/adapter-static": "^3.0.10",
     "better-sqlite3": "^11.0.0",
     "dayjs": "^1.11.0",
     "express": "^5.2.1",
