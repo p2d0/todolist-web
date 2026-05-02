@@ -14,7 +14,7 @@
           pname = "pomotasker";
           version = "0.1.0";
           src = ./.;
-          npmDepsHash = "sha256-Sh2nLxd+WstJI0vBxaZBpyMVjywRTWT1AmblplawTB4=";
+          npmDepsHash = "sha256-AKrwfLz13W+F95mLGgftwZWfIvCKSW0l17idbxerylI=";
           # Build AND runtime must use the exact same Node.js ABI
           nodejs = pkgs.nodejs_22;
           nativeBuildInputs = [ pkgs.python3 pkgs.node-gyp pkgs.pkg-config ];
