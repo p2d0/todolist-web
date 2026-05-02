@@ -1,54 +1,94 @@
 {
   description = "Pomotasker - SvelteKit habit tracker";
 
-  inputs = { nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable"; };
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    devshell.url = "github:numtide/devshell";
+    flake-utils.url = "github:numtide/flake-utils";
+    android.url = "github:tadfisher/android-nixpkgs";
+  };
 
-  outputs = { self, nixpkgs }:
-    let
-      forEachSystem = f:
-        nixpkgs.lib.genAttrs [ "x86_64-linux" "aarch64-linux" ]
-        (system: f nixpkgs.legacyPackages.${system});
-
-      app = pkgs:
-        pkgs.buildNpmPackage {
-          pname = "pomotasker";
-          version = "0.1.0";
-          src = ./.;
-          npmDepsHash = "sha256-AKrwfLz13W+F95mLGgftwZWfIvCKSW0l17idbxerylI=";
-          # Build AND runtime must use the exact same Node.js ABI
-          nodejs = pkgs.nodejs_22;
-          nativeBuildInputs = [ pkgs.python3 pkgs.node-gyp pkgs.pkg-config ];
-          buildInputs = [ pkgs.sqlite ];
-          dontNpmBuild = false;
-          npmBuildScript = "build";
-          # Prevent prebuild-install from downloading a mismatched binary during npm install
-          npmFlags = [ "--build-from-source" ];
-          installPhase = ''
-            mkdir -p $out/lib/node_modules/pomotasker-web
-            cp -r package.json build node_modules $out/lib/node_modules/pomotasker-web/
-            cp server.js ws-server.js $out/lib/node_modules/pomotasker-web/
-          '';
+  outputs = { self, nixpkgs, devshell, flake-utils, android }:
+    {
+      overlay = final: prev: {
+        inherit (self.packages.${final.system}) android-sdk;
+      };
+    }
+    // flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (system:
+      let
+        inherit (nixpkgs) lib;
+        pkgs = import nixpkgs {
+          inherit system;
+          config.allowUnfree = true;
+          overlays = [
+            devshell.overlays.default
+            self.overlay
+          ];
         };
-    in {
-      packages = forEachSystem (pkgs: { default = app pkgs; });
-
-      apps = forEachSystem (pkgs: {
-        default = {
-          type = "app";
-          program = "${pkgs.writeShellScript "pomotasker" ''
-            exec ${pkgs.nodejs_22}/bin/node ${
-              (app pkgs)
-            }/lib/node_modules/pomotasker-web/server.js
-          ''}";
+        androidPkgs = android.sdk.${system} (sdkPkgs: with sdkPkgs;
+          [
+            ndk-27-0-11902837
+            build-tools-36-0-0
+            build-tools-35-0-0
+            build-tools-34-0-0
+            cmdline-tools-latest
+            platform-tools
+            platforms-android-34
+            platforms-android-36
+          ]
+        );
+        app = pkgs:
+          pkgs.buildNpmPackage {
+            pname = "pomotasker";
+            version = "0.1.0";
+            src = ./.;
+            npmDepsHash = "sha256-fdTeqo79j59TcZ/zbfnoN9c878UPSO/PxH/DWf57uoA=";
+            nodejs = pkgs.nodejs_22;
+            nativeBuildInputs = [ pkgs.python3 pkgs.node-gyp pkgs.pkg-config ];
+            buildInputs = [ pkgs.sqlite ];
+            dontNpmBuild = false;
+            npmBuildScript = "build";
+            npmFlags = [ "--build-from-source" ];
+            installPhase = ''
+              mkdir -p $out/lib/node_modules/pomotasker-web
+              cp -r package.json build node_modules $out/lib/node_modules/pomotasker-web/
+              cp server.js ws-server.js $out/lib/node_modules/pomotasker-web/
+            '';
+          };
+      in rec {
+        packages = { android-sdk = androidPkgs; } // {
+          default = app pkgs;
         };
-      });
 
-      devShells = forEachSystem (pkgs: {
-        default = pkgs.mkShell {
-          buildInputs = [ pkgs.git-filter-repo pkgs.nodejs_22 ];
+        apps = {
+          default = {
+            type = "app";
+            program = "${pkgs.writeShellScript "pomotasker" ''
+              exec ${pkgs.nodejs_22}/bin/node ${
+                (app pkgs)
+              }/lib/node_modules/pomotasker-web/server.js
+            ''}";
+          };
         };
-      });
 
+        devShell = pkgs.devshell.mkShell {
+          name = "pomotasker";
+          env = [
+            { name = "JAVA_HOME"; value = pkgs.jdk21.home; }
+            { name = "ANDROID_HOME"; value = "${androidPkgs}/share/android-sdk"; }
+            { name = "ANDROID_SDK_ROOT"; value = "${androidPkgs}/share/android-sdk"; }
+            { name = "PATH"; prefix = "${androidPkgs}/bin"; }
+          ];
+          packages = [
+            pkgs.git-filter-repo
+            pkgs.nodejs_22
+            pkgs.jdk8
+            pkgs.gradle
+            androidPkgs
+          ];
+        };
+      }
+    ) // {
       nixosModules.pomotasker = { config, lib, pkgs, ... }:
         let
           pkg = self.packages.${pkgs.system}.default;
