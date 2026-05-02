@@ -161,6 +161,11 @@ def add_habit(name, habit_type):
             if combobox_ref:
                 cli(f'playwright-cli select {combobox_ref} "boolean"')
                 time.sleep(0.5)
+        elif habit_type == "number":
+            combobox_ref = find_ref('combobox "Type"')
+            if combobox_ref:
+                cli(f'playwright-cli select {combobox_ref} "number"')
+                time.sleep(0.5)
         save_ref = find_ref('button "Add"')
         if save_ref:
             cli(f"playwright-cli click {save_ref}")
@@ -253,6 +258,121 @@ def main():
                                             fail_test(f"Checkmark LOST: button shows '{txt3}' instead of '✓'")
                                     else:
                                         fail_test("Today circle not found after show")
+                                    
+                                    # TEST 5: Complete habit while hide done is active -> hides live
+                                    print("\nTEST 5: Completing habit while hide-done active hides it live")
+                                    # Hide is OFF (test 3 toggled). Habit is completed (checkmark).
+                                    # Step 1: Uncheck the habit (toggle off)
+                                    today4 = find_habit_today("Hide Done Test", -1)
+                                    if today4:
+                                        cli(f"playwright-cli click {today4}")
+                                        time.sleep(1); snap()
+                                        # Step 2: Activate hide done (habit is unchecked, should stay visible)
+                                        hide_ref2 = find_ref('button "Hide done"')
+                                        if hide_ref2:
+                                            cli(f"playwright-cli click {hide_ref2}")
+                                            time.sleep(1); snap()
+                                            # Habit still visible (it's unchecked)
+                                            # Step 3: Complete it while hide is active -> should hide live
+                                            today5 = find_habit_today("Hide Done Test", -1)
+                                            if today5:
+                                                cli(f"playwright-cli click {today5}")
+                                                time.sleep(2); snap()
+                                                if not has_text("Hide Done Test"):
+                                                    pass_test("Habit auto-hidden after completing while hide-done active")
+                                                else:
+                                                    fail_test("Habit still visible after completing while hide-done active")
+                                            else:
+                                                fail_test("Today circle not found for live-hide test")
+                                        else:
+                                            fail_test("Hide done button not found for live-hide test")
+                                    else:
+                                        fail_test("Today circle not found to uncheck")
+                                    
+                                    # TEST 6: Timer habit auto-hides when stopped while hide-done active
+                                    print("\nTEST 6: Timer auto-hides when stopped while hide-done active")
+                                    show_ref3 = find_ref('button "Show all"')
+                                    if show_ref3:
+                                        cli(f"playwright-cli click {show_ref3}")
+                                        time.sleep(1); snap()
+                                        if add_habit("Timer Hide Test", "timer"):
+                                            pass_test("Timer habit added")
+                                            today6 = find_habit_today("Timer Hide Test", -1)
+                                            if today6:
+                                                cli(f"playwright-cli click {today6}")
+                                                time.sleep(1); snap()
+                                                hide_ref3 = find_ref('button "Hide done"')
+                                                if hide_ref3:
+                                                    cli(f"playwright-cli click {hide_ref3}")
+                                                    time.sleep(1); snap()
+                                                    today7 = find_habit_today("Timer Hide Test", -1)
+                                                    if today7:
+                                                        cli(f"playwright-cli click {today7}")
+                                                        time.sleep(2); snap()
+                                                        if not has_text("Timer Hide Test"):
+                                                            pass_test("Timer habit auto-hidden when stopped")
+                                                        else:
+                                                            fail_test("Timer habit still visible after stopping")
+                                                    else:
+                                                        fail_test("Today circle not found to stop timer")
+                                                else:
+                                                    fail_test("Hide done button not found for timer test")
+                                            else:
+                                                fail_test("Today circle not found to start timer")
+                                        else:
+                                            fail_test("Timer habit not added")
+                                    else:
+                                        fail_test("Show all button not found for timer test")
+                                    
+                                    # TEST 7: Number habit auto-hides when value >= min while hide-done active
+                                    print("\nTEST 7: Number auto-hides when value >= min while hide-done active")
+                                    show_ref4 = find_ref('button "Show all"')
+                                    if show_ref4:
+                                        cli(f"playwright-cli click {show_ref4}")
+                                        time.sleep(1); snap()
+                                        hide_ref4 = find_ref('button "Hide done"')
+                                        if hide_ref4:
+                                            cli(f"playwright-cli click {hide_ref4}")
+                                            time.sleep(1); snap()
+                                            if add_habit("Number Hide Test", "number"):
+                                                pass_test("Number habit added")
+                                                today8 = find_habit_today("Number Hide Test", -1)
+                                                if today8:
+                                                    cli(f"playwright-cli click {today8}")
+                                                    time.sleep(2); snap()
+                                                    num_input_ref = find_ref('spinbutton "Value"')
+                                                    if num_input_ref:
+                                                        cli(f'playwright-cli fill {num_input_ref} "10"')
+                                                        time.sleep(0.5); snap()
+                                                        save_ref2 = find_ref('button "Save"')
+                                                        if save_ref2:
+                                                            cli(f"playwright-cli click {save_ref2}")
+                                                            time.sleep(2); snap()
+                                                            if not has_text("Number Hide Test"):
+                                                                pass_test("Number habit auto-hidden when value entered")
+                                                            else:
+                                                                fail_test("Number habit still visible after entering value")
+                                                        else:
+                                                            save_ref3 = find_ref('button "Add"')
+                                                            if save_ref3:
+                                                                cli(f"playwright-cli click {save_ref3}")
+                                                                time.sleep(2); snap()
+                                                                if not has_text("Number Hide Test"):
+                                                                    pass_test("Number habit auto-hidden when value entered")
+                                                                else:
+                                                                    fail_test("Number habit still visible after entering value")
+                                                            else:
+                                                                fail_test("Save/Add button not found in number editor")
+                                                    else:
+                                                        fail_test("Number input not found")
+                                                else:
+                                                    fail_test("Today circle not found for number test")
+                                            else:
+                                                fail_test("Number habit not added")
+                                        else:
+                                            fail_test("Hide done button not found for number test")
+                                    else:
+                                        fail_test("Show all button not found for number test")
                                 else:
                                     fail_test("Habit not shown")
                             else:
@@ -269,6 +389,8 @@ def main():
             fail_test("Bool habit not visible")
 
         cleanup_habit("Hide Done Test")
+        cleanup_habit("Timer Hide Test")
+        cleanup_habit("Number Hide Test")
 
         print(f"\n{'=' * 40}")
         print(f"Results: {PASS}/{TOTAL} passed, {FAIL} failed")
