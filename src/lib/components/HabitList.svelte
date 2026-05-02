@@ -2,7 +2,7 @@
   import { base } from '$app/paths';
   import HabitRow from './HabitRow.svelte';
   import { onMount } from 'svelte';
-  import { hideCompletedStore } from '$lib/stores/timer.js';
+  import { hideCompletedStore, weekDataStore } from '$lib/stores/timer.js';
   import dayjs from 'dayjs';
 
   export let habitsStore;
@@ -66,6 +66,8 @@
     }
     completedIds = results;
     completedLoaded = true;
+    // Also refresh weekDataStore so HabitRow circles show fresh data
+    weekDataStore.set(allRows);
   }
 
   function getWeekRange() {

@@ -241,6 +241,18 @@ def main():
                                 time.sleep(1); snap()
                                 if has_text("Hide Done Test"):
                                     pass_test("Habit shown")
+                                    
+                                    # TEST 4: Checkmark must persist after show
+                                    print("\nTEST 4: Checkmark persists after hide/show")
+                                    today3 = find_habit_today("Hide Done Test", -1)
+                                    if today3:
+                                        txt3 = get_button_text(today3)
+                                        if txt3 == "✓":
+                                            pass_test("Checkmark still present")
+                                        else:
+                                            fail_test(f"Checkmark LOST: button shows '{txt3}' instead of '✓'")
+                                    else:
+                                        fail_test("Today circle not found after show")
                                 else:
                                     fail_test("Habit not shown")
                             else:
