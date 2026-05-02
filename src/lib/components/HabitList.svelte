@@ -2,9 +2,8 @@
   import { base } from '$app/paths';
   import HabitRow from './HabitRow.svelte';
   import { onMount } from 'svelte';
-  import { hideCompletedStore, weekDataStore } from '$lib/stores/timer.js';
+  import { hideCompletedStore } from '$lib/stores/timer.js';
   import dayjs from 'dayjs';
-  import { get } from 'svelte/store';
 
   export let habitsStore;
   export let onEdit = null;
@@ -46,9 +45,12 @@
     habitsStore.set(data);
   }
 
-  function checkCompleted() {
+  async function checkCompleted() {
     const today = dayjs().format('YYYY-MM-DD');
-    const allRows = get(weekDataStore);
+    const { startDate, endDate } = getWeekRange();
+    const res = await fetch(`${base}/api/sessions?type=weekdata&startDate=${startDate}&endDate=${endDate}`);
+    const data = await res.json();
+    const allRows = data.rows || [];
     const results = {};
     for (const h of habits) {
       const row = allRows.find(r => r.habit_id === h.id && r.date === today);
@@ -66,8 +68,17 @@
     completedLoaded = true;
   }
 
-  function toggleHideCompleted() {
-    hideCompleted = !hideCompleted;
+  function getWeekRange() {
+    const today = dayjs();
+    const dayOfWeek = today.day();
+    const monday = today.subtract((dayOfWeek + 6) % 7, 'day');
+    const sunday = monday.add(6, 'day');
+    return { startDate: monday.format('YYYY-MM-DD'), endDate: sunday.format('YYYY-MM-DD') };
+  }
+
+  async function toggleHideCompleted() {
+    await checkCompleted();  // refresh completedIds FIRST
+    hideCompleted = !hideCompleted;  // then flip - reactive sees fresh data
     hideCompletedStore.set(hideCompleted);
   }
 
