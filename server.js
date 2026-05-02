@@ -34,29 +34,30 @@ const server = http.createServer((req, res) => {
 	}
 
 	let url = new URL(req.url, `http://${req.headers.host}`).pathname;
-	// Strip base path for file lookup
 	if (url.startsWith(basePath)) {
 		url = url.slice(basePath.length) || "/";
 	}
 
-	// Serve index.html for SPA routes
-	let filePath = join(wwwDir, url);
-	if (!existsSync(filePath) || !filePath.endsWith(".html")) {
-		filePath = join(wwwDir, "index.html");
-	}
-
-	if (!existsSync(filePath)) {
-		res.writeHead(404);
-		res.end("Not found");
+	// Serve actual file if it exists
+	const filePath = join(wwwDir, url);
+	if (existsSync(filePath)) {
+		const ext = posix.extname(filePath);
+		const contentType = mimeTypes[ext] || "application/octet-stream";
+		res.writeHead(200, { "Content-Type": contentType });
+		res.end(readFileSync(filePath));
 		return;
 	}
 
-	const ext = posix.extname(filePath);
-	const contentType = mimeTypes[ext] || "application/octet-stream";
-	const content = readFileSync(filePath);
+	// SPA fallback
+	const indexPath = join(wwwDir, "index.html");
+	if (existsSync(indexPath)) {
+		res.writeHead(200, { "Content-Type": "text/html" });
+		res.end(readFileSync(indexPath));
+		return;
+	}
 
-	res.writeHead(200, { "Content-Type": contentType });
-	res.end(content);
+	res.writeHead(404);
+	res.end("Not found");
 });
 
 initWebSocket(server, basePath);
