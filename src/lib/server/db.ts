@@ -73,6 +73,13 @@ export function updateHabit(id, description, habitType, minValue) {
 	).run(description, habitType, minValue, id);
 }
 
+export function reorderHabits(orderedIds: any[]) {
+	const db = getDb();
+	for (const [i, id] of orderedIds.entries()) {
+		db.prepare("UPDATE habits SET order_index = ? WHERE id = ?").run(i, id);
+	}
+}
+
 export function deleteHabit(id) {
 	const db = getDb();
 	db.prepare("DELETE FROM habits WHERE id = ?").run(id);

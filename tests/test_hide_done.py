@@ -388,6 +388,12 @@ def main():
         else:
             fail_test("Bool habit not visible")
 
+        # Ensure hide is OFF before cleanup
+        show_cleanup = find_ref('button "Show all"')
+        if show_cleanup:
+            cli(f"playwright-cli click {show_cleanup}")
+            time.sleep(1); snap()
+
         cleanup_habit("Hide Done Test")
         cleanup_habit("Timer Hide Test")
         cleanup_habit("Number Hide Test")
