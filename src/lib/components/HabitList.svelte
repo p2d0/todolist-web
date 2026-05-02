@@ -14,6 +14,9 @@
   let completedIds = {};
   let completedLoaded = false;
   let mounted = false;
+  let draggedHabit = null;
+  let dropTarget = null;
+  let dropAfter = false;
 
   onMount(() => {
     mounted = true;
@@ -27,15 +30,16 @@
       if (document.visibilityState === 'visible') refresh();
     };
     const handleSync = () => refresh();
+    const handleSessionSync = () => checkCompleted();
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('sync:habits', handleSync);
-    window.addEventListener('sync:sessions', handleSync);
+    window.addEventListener('sync:sessions', handleSessionSync);
     return () => {
       unsub();
       unsubHide();
       document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('sync:habits', handleSync);
-      window.removeEventListener('sync:sessions', handleSync);
+      window.removeEventListener('sync:sessions', handleSessionSync);
     };
   });
 
@@ -84,6 +88,56 @@
     hideCompletedStore.set(hideCompleted);
   }
 
+  function handleDragStart(habit, event) {
+    draggedHabit = habit;
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', habit.id.toString());
+  }
+
+  function handleDragOver(habit, event) {
+    if (!draggedHabit || draggedHabit.id === habit.id) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    dropTarget = habit;
+    const clientY = event.clientY;
+    const rect = event.target.getBoundingClientRect();
+    dropAfter = clientY > rect.top + rect.height / 2;
+  }
+
+  function handleDragEnd() {
+    draggedHabit = null;
+    dropTarget = null;
+  }
+
+  async function handleDrop(habit, event) {
+    event.preventDefault();
+    if (!draggedHabit || !dropTarget || draggedHabit.id === habit.id) return;
+    const oldIndex = visibleHabits.findIndex(h => h.id === draggedHabit.id);
+    const newIndex = visibleHabits.findIndex(h => h.id === habit.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    // Build new order: take all visible habit IDs in new order
+    const newOrder = [...visibleHabits];
+    const [moved] = newOrder.splice(oldIndex, 1);
+    const insertAt = newOrder.findIndex(h => h.id === habit.id) + (dropAfter ? 1 : 0);
+    newOrder.splice(insertAt, 0, moved);
+    const orderedIds = newOrder.map(h => h.id);
+    // Merge: visible habits in new order + hidden ones appended
+    const allIds = orderedIds.filter(id => id !== null);
+    for (const h of habits) {
+      if (!allIds.includes(h.id)) {
+        allIds.push(h.id);
+      }
+    }
+    await fetch(`${base}/api/habits`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderedIds: allIds }),
+    });
+    draggedHabit = null;
+    dropTarget = null;
+    await refresh();
+  }
+
   $: visibleHabits = (hideCompleted && completedLoaded)
     ? habits.filter(h => !completedIds[h.id])
     : habits;
@@ -100,7 +154,20 @@
   {/if}
   <div class="habit-list-inner">
     {#each visibleHabits as habit (habit.id)}
-      <HabitRow {habit} {onEdit} {onDelete} />
+      <div class="habit-wrapper"
+        class:dragging={draggedHabit && draggedHabit.id === habit.id}
+        class:drop-target={dropTarget && dropTarget.id === habit.id}
+        draggable={true}
+        on:dragstart={(e) => handleDragStart(habit, e)}
+        on:dragend={handleDragEnd}
+        on:dragover={(e) => handleDragOver(habit, e)}
+        on:drop={(e) => handleDrop(habit, e)}
+        aria-label={`Drag to reorder - ${habit.description}`}>
+        <HabitRow {habit} {onEdit} {onDelete} />
+        {#if draggedHabit && draggedHabit.id === habit.id}
+          <div class="drag-ghost"></div>
+        {/if}
+      </div>
     {/each}
   </div>
 </div>
@@ -147,5 +214,38 @@
     flex: 1;
     overflow-y: auto;
     min-height: 0;
+  }
+
+  .habit-wrapper {
+    cursor: grab;
+    user-select: none;
+    position: relative;
+    transition: background 200ms ease;
+  }
+
+  .habit-wrapper:hover {
+    background: rgba(255,255,255,0.02);
+  }
+
+  .habit-wrapper:active {
+    cursor: grabbing;
+  }
+
+  .habit-wrapper.dragging {
+    opacity: 0.25;
+  }
+
+  .habit-wrapper.drop-target {
+    background: rgba(180, 190, 254, 0.08);
+  }
+
+  .drag-ghost {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.15;
+    background: #b4befe;
+    border-radius: 8px;
+    border: 1px solid rgba(180, 190, 254, 0.3);
   }
 </style>
