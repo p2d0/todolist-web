@@ -25,13 +25,13 @@
   }
 
   async function loadHabits() {
-    const res = await fetch(`${base}/api/habits`);
-    const habits = await res.json();
-    habitsStore.set(habits);
-
     const { startDate, endDate } = getWeekRange();
-    const data = await (await fetch(`${base}/api/sessions?type=weekdata&startDate=${startDate}&endDate=${endDate}`)).json();
+    const [res, data] = await Promise.all([
+      fetch(`${base}/api/habits`).then(r => r.json()),
+      fetch(`${base}/api/sessions?type=weekdata&startDate=${startDate}&endDate=${endDate}`).then(r => r.json()),
+    ]);
     weekDataStore.set(data.rows);
+    habitsStore.set(res);
   }
 
   async function afterAddHabit() {
