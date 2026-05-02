@@ -51,7 +51,7 @@
             npmFlags = [ "--build-from-source" ];
             installPhase = ''
               mkdir -p $out/lib/node_modules/pomotasker-web
-              cp -r package.json build node_modules $out/lib/node_modules/pomotasker-web/
+              cp -r package.json www node_modules $out/lib/node_modules/pomotasker-web/
               cp server.js ws-server.js $out/lib/node_modules/pomotasker-web/
             '';
           };
