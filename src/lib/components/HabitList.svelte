@@ -79,7 +79,8 @@
 <div class="habit-list">
   {#if mounted}
     <div class="habit-list-header">
-      <button class="hide-toggle" class:active={hideCompleted} on:click={toggleHideCompleted}>
+      <button class="hide-toggle" class:active={hideCompleted} on:click={toggleHideCompleted}
+        aria-label={hideCompleted ? 'Show all' : 'Hide done'}>
         {hideCompleted ? '👁️ Show all' : '🙈 Hide done'}
       </button>
     </div>

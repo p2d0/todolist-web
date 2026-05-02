@@ -46,7 +46,7 @@
     <div class="inputs">
       <label>
         Value
-        <input type="number" bind:value={newVal} min="0" autofocus on:focus={(e) => e.target.scrollIntoView({ block: 'center' })} />
+        <input type="number" aria-label="Value" bind:value={newVal} min="0" autofocus on:focus={(e) => e.target.scrollIntoView({ block: 'center' })} />
       </label>
     </div>
     <div class="buttons">
