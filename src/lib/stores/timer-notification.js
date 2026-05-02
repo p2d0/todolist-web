@@ -80,6 +80,7 @@ export async function initTimerNotification() {
 					await ForegroundService.updateForegroundService({
 						id: 1,
 						body: `Running: ${formatTime(e)}`,
+						smallIcon: "ic_stat_icon_config_sample",
 					});
 				}, 1000);
 			} else {
