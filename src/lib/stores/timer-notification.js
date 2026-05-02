@@ -2,6 +2,7 @@ import { Capacitor } from "@capacitor/core";
 import {
 	ForegroundService,
 	Importance,
+	ServiceType,
 } from "@capawesome-team/capacitor-android-foreground-service";
 import { get } from "svelte/store";
 import { habitsStore, timerStore } from "./timer.js";
@@ -58,6 +59,7 @@ export async function initTimerNotification() {
 					id: 1,
 					title,
 					body: `Running: ${formatTime(elapsed)}`,
+					serviceType: ServiceType.Location,
 					smallIcon: "ic_stat_icon_config_sample",
 					buttons: [{ title: "Stop", id: 1 }],
 					silent: false,
