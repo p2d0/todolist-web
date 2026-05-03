@@ -447,9 +447,59 @@ def main():
         cleanup_habit("Playwright Timer Test")
 
         # =========================
-        # TEST 5: Remove habit
+        # TEST 5: Edit time replaces instead of adding
         # =========================
-        print("\nTEST 5: Remove habit")
+        print("\nTEST 5: Edit time replaces instead of adding")
+        cli('playwright-cli type "Escape"')
+        time.sleep(0.3)
+        cli("playwright-cli reload")
+        time.sleep(2); snap()
+        if add_habit("Playwright Timer Test", "timer"):
+            pass_test("Timer habit added")
+            buttons = get_all_buttons("Playwright Timer Test")
+            if len(buttons) >= 1:
+                monday_name, monday_ref = buttons[0]
+                # Set 5 minutes
+                cli(f"playwright-cli click {monday_ref}")
+                time.sleep(1); snap()
+                minutes_spin = find_ref('spinbutton "Minutes"')
+                if minutes_spin:
+                    cli(f'playwright-cli fill {minutes_spin} "5"')
+                    time.sleep(0.5)
+                    save_btn = find_ref('button "Save"')
+                    cli(f"playwright-cli click {save_btn}")
+                    time.sleep(2); snap()
+                    # Re-open and change to 2 minutes
+                    buttons2 = get_all_buttons("Playwright Timer Test")
+                    cli(f"playwright-cli click {buttons2[0][1]}")
+                    time.sleep(1); snap()
+                    minutes_spin2 = find_ref('spinbutton "Minutes"')
+                    if minutes_spin2:
+                        cli(f'playwright-cli fill {minutes_spin2} "2"')
+                        time.sleep(0.5)
+                        save_btn2 = find_ref('button "Save"')
+                        cli(f"playwright-cli click {save_btn2}")
+                        time.sleep(2); snap()
+                        buttons3 = get_all_buttons("Playwright Timer Test")
+                        monday_txt = get_button_text(buttons3[0][1])
+                        if monday_txt == "2m":
+                            pass_test("Editing time replaces old value")
+                        else:
+                            fail_test(f"Monday shows '{monday_txt}' instead of '2m' after edit")
+                    else:
+                        fail_test("TimeEditor did not reopen")
+                else:
+                    fail_test("TimeEditor did not open")
+            else:
+                fail_test("No day buttons found")
+        else:
+            fail_test("Timer habit not visible")
+        cleanup_habit("Playwright Timer Test")
+
+        # =========================
+        # TEST 6: Remove habit
+        # =========================
+        print("\nTEST 6: Remove habit")
         if add_habit("Delete Me Test", "boolean"):
             pass_test("Habit to delete added")
             if delete_habit("Delete Me Test"):
