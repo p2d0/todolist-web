@@ -12,6 +12,7 @@ let updateInterval = null;
 let serviceRunning = false;
 let isProcessing = false;
 let pendingState = null;
+let initialized = false;
 
 function formatTime(seconds) {
 	const mins = Math.floor(seconds / 60);
@@ -20,6 +21,7 @@ function formatTime(seconds) {
 }
 
 async function processState(state) {
+	console.log("processState: running=" + state.running + " serviceRunning=" + serviceRunning);
 	if (isProcessing) {
 		pendingState = state;
 		return;
@@ -29,6 +31,7 @@ async function processState(state) {
 		if (state.running) {
 			// Only start the foreground service if not already running
 			if (!serviceRunning) {
+				serviceRunning = true; // Set immediately to prevent duplicate calls
 				const habits = get(habitsStore);
 				const habit = habits.find((h) => h.id === state.activeHabitId);
 				const title = habit ? habit.description : "PomoTasker";
@@ -42,7 +45,7 @@ async function processState(state) {
 						id: "timer",
 						name: "Timer",
 						description: "Timer notification",
-						importance: Importance.Default,
+						importance: Importance.High,
 					});
 				} catch (e) {
 					// channel may already exist
@@ -58,10 +61,12 @@ async function processState(state) {
 					notificationChannelId: "timer",
 				});
 
-				serviceRunning = true;
-
 				// Start the update interval
-				if (updateInterval) clearInterval(updateInterval);
+				if (updateInterval) {
+					console.log("Clearing existing interval");
+					clearInterval(updateInterval);
+				}
+				console.log("Creating new interval");
 				updateInterval = setInterval(async () => {
 					const s = get(timerStore);
 					if (!s.running || !serviceRunning) {
@@ -73,14 +78,16 @@ async function processState(state) {
 						? Math.floor((Date.now() - s.startTime) / 1000) + s.elapsedBefore
 						: s.elapsedBefore || 0;
 					try {
-						await ForegroundService.updateForegroundService({
-							id: 1,
-							body: `Running: ${formatTime(e)}`,
-							smallIcon: "ic_stat_icon_config_sample",
-							buttons: [{ title: "Stop", id: 1 }],
-							notificationChannelId: "timer",
-							silent: true,
-						});
+						const habits = get(habitsStore);
+						const habit = habits.find((h) => h.id === s.activeHabitId);
+						const title = habit ? habit.description : "PomoTasker";
+					await ForegroundService.updateForegroundService({
+						id: 1,
+						body: `Running: ${formatTime(e)}`,
+						smallIcon: "ic_stat_icon_config_sample",
+						notificationChannelId: "timer",
+						silent: true,
+					});
 					} catch (e) {
 						console.error("Update notification error:", e);
 					}
@@ -115,6 +122,8 @@ async function processState(state) {
 
 export async function initTimerNotification() {
 	if (!Capacitor.isNativePlatform("android")) return;
+	if (initialized) return;
+	initialized = true;
 
 	try {
 		await ForegroundService.requestPermissions();
@@ -123,7 +132,8 @@ export async function initTimerNotification() {
 	}
 
 	buttonListener = ForegroundService.addListener("buttonClicked", (data) => {
-		if (data.id === 1) {
+		console.log("Button clicked:", JSON.stringify(data));
+		if (data.buttonId === 1) {
 			timerStore.stop();
 		}
 	});
@@ -151,4 +161,5 @@ export function cleanupTimerNotification() {
 		updateInterval = null;
 	}
 	serviceRunning = false;
+	initialized = false;
 }
