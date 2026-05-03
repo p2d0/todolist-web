@@ -20,6 +20,11 @@
       return;
     }
 
+    // Replace existing sessions for this date instead of accumulating
+    if (hasData) {
+      await fetch(`${base}/api/sessions?date=${date}&habitId=${habitId}`, { method: 'DELETE' });
+    }
+
     await fetch(`${base}/api/sessions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
