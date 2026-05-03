@@ -303,12 +303,14 @@
         }}
         on:touchend={() => {
           cancelLongPress();
-          if (!wasLongPress && !touchMoved) {
-            suppressNextClick = true;
-            handleCircleClick(circle);
+          if (habit.habit_type === 'timer' && circle.isToday) {
+            if (!wasLongPress && !touchMoved) {
+              suppressNextClick = true;
+              handleCircleClick(circle);
+            }
+            wasLongPress = false;
+            touchMoved = false;
           }
-          wasLongPress = false;
-          touchMoved = false;
         }}
         on:touchcancel={() => {
           cancelLongPress();
