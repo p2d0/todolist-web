@@ -38,3 +38,4 @@ android/
 capacitor.config.json
 www/
 
+.mcp.json
