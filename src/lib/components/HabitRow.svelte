@@ -265,10 +265,10 @@
         class:circle-active={isCircleActive(circle)}
         on:click={() => handleCircleClick(circle)}
         on:contextmenu={(e) => { if (habit.habit_type === 'timer' && circle.isToday) { e.preventDefault(); openTimeEditor(circle); } }}
-        on:mousedown={() => { if (habit.habit_type === 'timer' && circle.isToday) startLongPress(circle); }}
+        on:mousedown={(e) => { if (habit.habit_type === 'timer' && circle.isToday) { e.preventDefault(); startLongPress(circle); } }}
         on:mouseup={cancelLongPress}
         on:mouseleave={cancelLongPress}
-        on:touchstart={() => { if (habit.habit_type === 'timer' && circle.isToday) startLongPress(circle); }}
+        on:touchstart={(e) => { if (habit.habit_type === 'timer' && circle.isToday) { e.preventDefault(); startLongPress(circle); } }}
         on:touchend={cancelLongPress}
         on:touchcancel={cancelLongPress}
       >
