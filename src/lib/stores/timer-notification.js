@@ -39,6 +39,11 @@ async function processState(state) {
 					? Math.floor((Date.now() - state.startTime) / 1000) +
 						state.elapsedBefore
 					: state.elapsedBefore || 0;
+				const isPomodoro = state.mode === 'timed';
+				const pomodoroDuration = 1500; // 25 minutes
+				const body = isPomodoro
+					? `Remaining: ${formatTime(Math.max(0, pomodoroDuration - elapsed))}`
+					: `Running: ${formatTime(elapsed)}`;
 
 				try {
 					await ForegroundService.createNotificationChannel({
@@ -54,7 +59,7 @@ async function processState(state) {
 				await ForegroundService.startForegroundService({
 					id: 1,
 					title,
-					body: `Running: ${formatTime(elapsed)}`,
+					body,
 					smallIcon: "ic_stat_icon_config_sample",
 					buttons: [{ title: "Stop", id: 1 }],
 					silent: false,
@@ -74,20 +79,26 @@ async function processState(state) {
 						updateInterval = null;
 						return;
 					}
-					const e = s.startTime
-						? Math.floor((Date.now() - s.startTime) / 1000) + s.elapsedBefore
-						: s.elapsedBefore || 0;
-				try {
-					const habits = get(habitsStore);
-					const habit = habits.find((h) => h.id === s.activeHabitId);
-					const title = habit ? habit.description : "PomoTasker";
-					await ForegroundService.updateForegroundService({
-						id: 1,
-						body: `Running: ${formatTime(e)}`,
-						smallIcon: "ic_stat_icon_config_sample",
-						notificationChannelId: "timer",
-						silent: true,
-					});
+				const e = s.startTime
+					? Math.floor((Date.now() - s.startTime) / 1000) + s.elapsedBefore
+					: s.elapsedBefore || 0;
+				const isPomodoroUpdate = s.mode === 'timed';
+				const pomodoroDurationUpdate = 1500;
+				const body = isPomodoroUpdate
+					? `Remaining: ${formatTime(Math.max(0, pomodoroDurationUpdate - e))}`
+					: `Running: ${formatTime(e)}`;
+			try {
+				const habits = get(habitsStore);
+				const habit = habits.find((h) => h.id === s.activeHabitId);
+				const title = habit ? habit.description : "PomoTasker";
+				await ForegroundService.updateForegroundService({
+					id: 1,
+					title,
+					body,
+					smallIcon: "ic_stat_icon_config_sample",
+					notificationChannelId: "timer",
+					silent: true,
+				});
 					// Poll for pending background button clicks
 					try {
 						const pending = await ForegroundService.checkPendingButtonClick();
