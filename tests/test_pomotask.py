@@ -116,12 +116,35 @@ def get_lines():
         return f.read().split("\n")
 
 
+def _find_habit_description_lines(habit_name):
+    """Return indices of lines that look like habit description nodes
+    (e.g. `  - generic [ref=e38]: Playwright Timer Test`).
+    Filters out banner or other nodes by requiring an Edit/Delete button nearby.
+    """
+    lines = get_lines()
+    result = []
+    for i, line in enumerate(lines):
+        if re.search(rf":\s*{re.escape(habit_name)}\s*$", line) and "generic [ref=" in line:
+            for j in range(i + 1, min(i + 4, len(lines))):
+                if "Edit habit" in lines[j] or "Delete habit" in lines[j]:
+                    result.append(i)
+                    break
+    return result
+
+
+def _today_button_index():
+    """Return 1-based index of today's button (Mon=1 ... Sun=7)."""
+    import datetime
+    # datetime.weekday() -> Monday=0 ... Sunday=6, matching the app's circle order
+    return datetime.datetime.now().weekday() + 1
+
+
 def find_habit_today(habit_name, occurrence=-1):
-    """Find today circle (5th button) for a habit using raw lines.
+    """Find today circle for a habit using raw lines.
     occurrence=-1 means last/newest, 0 means first/oldest.
     """
     lines = get_lines()
-    matches = [i for i, line in enumerate(lines) if habit_name in line]
+    matches = _find_habit_description_lines(habit_name)
     if not matches:
         return None
     idx = matches[occurrence]
@@ -139,13 +162,14 @@ def find_habit_today(habit_name, occurrence=-1):
             break
     if circles_line is None:
         return None
+    target = _today_button_index()
     bc = 0
     for j in range(circles_line + 1, len(lines)):
         nl = lines[j]
         ni = len(nl) - len(nl.lstrip()) if nl.strip() else 999
         if "button" in nl and "ref=" in nl and ni > circles_indent:
             bc += 1
-            if bc == 5:
+            if bc == target:
                 m = re.search(r"ref=(e\d+)", nl)
                 if m:
                     return m.group(1)
@@ -157,33 +181,31 @@ def find_habit_today(habit_name, occurrence=-1):
 def get_all_buttons(habit_name):
     """Get all 7 day buttons for a habit. Returns list of (day_label, ref)."""
     lines = get_lines()
-    idx = None
-    for i, line in enumerate(lines):
-        if habit_name in line:
-            idx = i; break
-    if idx is None:
-        return []
-    name_indent = len(lines[idx]) - len(lines[idx].lstrip())
-    circles_indent = name_indent - 2
-    circles_line = None
-    for j in range(idx + 1, len(lines)):
-        nl = lines[j]
-        ni = len(nl) - len(nl.lstrip()) if nl.strip() else 999
-        if ni == circles_indent and "generic [ref=" in nl and nl.strip().startswith("- generic"):
-            circles_line = j; break
-        if ni <= name_indent - 4 and nl.strip(): break
-    if circles_line is None:
-        return []
-    btns = []
-    for j in range(circles_line + 1, len(lines)):
-        nl = lines[j]
-        ni = len(nl) - len(nl.lstrip()) if nl.strip() else 999
-        if "button" in nl and "ref=" in nl and ni > circles_indent:
-            m = re.search(r'button "([^"]+)"', nl)
-            m2 = re.search(r"ref=(e\d+)", nl)
-            btns.append((m.group(1) if m else "?", m2.group(1) if m2 else None))
-        if ni <= circles_indent and nl.strip(): break
-    return btns
+    matches = _find_habit_description_lines(habit_name)
+    for idx in matches:
+        name_indent = len(lines[idx]) - len(lines[idx].lstrip())
+        circles_indent = name_indent - 2
+        circles_line = None
+        for j in range(idx + 1, len(lines)):
+            nl = lines[j]
+            ni = len(nl) - len(nl.lstrip()) if nl.strip() else 999
+            if ni == circles_indent and "generic [ref=" in nl and nl.strip().startswith("- generic"):
+                circles_line = j; break
+            if ni <= name_indent - 4 and nl.strip(): break
+        if circles_line is None:
+            continue
+        btns = []
+        for j in range(circles_line + 1, len(lines)):
+            nl = lines[j]
+            ni = len(nl) - len(nl.lstrip()) if nl.strip() else 999
+            if "button" in nl and "ref=" in nl and ni > circles_indent:
+                m = re.search(r'button "([^"]+)"', nl)
+                m2 = re.search(r"ref=(e\d+)", nl)
+                btns.append((m.group(1) if m else "?", m2.group(1) if m2 else None))
+            if ni <= circles_indent and nl.strip(): break
+        if btns:
+            return btns
+    return []
 
 
 def pass_test(name):
@@ -224,24 +246,23 @@ def add_habit(name, habit_type):
 
 def find_first_delete_ref(habit_name):
     lines = get_lines()
-    for i, line in enumerate(lines):
-        if habit_name in line:
-            for j in range(i + 1, min(i + 5, len(lines))):
-                if "Delete habit" in lines[j]:
-                    m = re.search(r"ref=(e\d+)", lines[j])
-                    if m:
-                        return m.group(1)
-            break
+    matches = _find_habit_description_lines(habit_name)
+    for idx in matches:
+        for j in range(idx + 1, min(idx + 5, len(lines))):
+            if "Delete habit" in lines[j]:
+                m = re.search(r"ref=(e\d+)", lines[j])
+                if m:
+                    return m.group(1)
     return None
 
 
 def delete_habit(habit_name):
     del_ref = find_first_delete_ref(habit_name)
     if del_ref:
+        # Bypass native confirm dialog so deletion proceeds immediately
+        cli('playwright-cli eval "window.confirm = () => true"')
         cli(f"playwright-cli click {del_ref}")
-        time.sleep(0.3)
-        cli("playwright-cli dialog-accept")
-        time.sleep(0.5)
+        time.sleep(0.8)
         snap()
         return not has_text(habit_name)
     return False
@@ -353,12 +374,17 @@ def main():
             if today:
                 cli(f"playwright-cli click {today}")
                 time.sleep(1); snap()
-                if "active" in open(SNAP_FILE).read() if SNAP_FILE else False:
+                # Re-find today circle (ref may change after render)
+                time.sleep(0.5)
+                today = find_habit_today("Playwright Timer Test", -1)
+                txt = get_button_text(today) if today else None
+                # When timer is running the today circle shows elapsed time (e.g. "1s", "2m")
+                if txt and any(c.isdigit() for c in txt):
                     pass_test("Timer started (circle active)")
                     # Close any open dialog
                     cli('playwright-cli type "Escape"')
                     time.sleep(0.5); snap()
-                    today2 = find_habit_today("Playwright Timer Test", 0)
+                    today2 = find_habit_today("Playwright Timer Test", -1)
                     if today2:
                         cli(f"playwright-cli click {today2}")
                         time.sleep(1)
