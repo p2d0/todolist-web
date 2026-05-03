@@ -305,9 +305,9 @@
           cancelLongPress();
           if (habit.habit_type === 'timer' && circle.isToday) {
             if (!wasLongPress && !touchMoved) {
-              suppressNextClick = true;
               handleCircleClick(circle);
             }
+            suppressNextClick = true;
             wasLongPress = false;
             touchMoved = false;
           }
