@@ -77,10 +77,10 @@ async function processState(state) {
 					const e = s.startTime
 						? Math.floor((Date.now() - s.startTime) / 1000) + s.elapsedBefore
 						: s.elapsedBefore || 0;
-					try {
-						const habits = get(habitsStore);
-						const habit = habits.find((h) => h.id === s.activeHabitId);
-						const title = habit ? habit.description : "PomoTasker";
+				try {
+					const habits = get(habitsStore);
+					const habit = habits.find((h) => h.id === s.activeHabitId);
+					const title = habit ? habit.description : "PomoTasker";
 					await ForegroundService.updateForegroundService({
 						id: 1,
 						body: `Running: ${formatTime(e)}`,
@@ -88,9 +88,18 @@ async function processState(state) {
 						notificationChannelId: "timer",
 						silent: true,
 					});
-					} catch (e) {
-						console.error("Update notification error:", e);
+					// Poll for pending background button clicks
+					try {
+						const pending = await ForegroundService.checkPendingButtonClick();
+						if (pending && pending.buttonId === 1) {
+							await timerStore.stop();
+						}
+					} catch (pollErr) {
+						// ignore
 					}
+				} catch (e) {
+					console.error("Update notification error:", e);
+				}
 				}, 1000);
 			}
 		} else {
