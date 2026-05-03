@@ -268,7 +268,7 @@
         on:mousedown={(e) => { if (habit.habit_type === 'timer' && circle.isToday) { e.preventDefault(); startLongPress(circle); } }}
         on:mouseup={cancelLongPress}
         on:mouseleave={cancelLongPress}
-        on:touchstart={(e) => { if (habit.habit_type === 'timer' && circle.isToday) { e.preventDefault(); startLongPress(circle); } }}
+        on:touchstart={() => { if (habit.habit_type === 'timer' && circle.isToday) startLongPress(circle); }}
         on:touchend={cancelLongPress}
         on:touchcancel={cancelLongPress}
       >
