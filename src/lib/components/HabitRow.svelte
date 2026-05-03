@@ -21,6 +21,10 @@
   let tick = 0;
   let longPressTimer = null;
   let wasLongPress = false;
+  let touchMoved = false;
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let suppressNextClick = false;
 
   const unsub = timerStore.subscribe(v => activeTimer = v);
   const weekDataUnsub = weekDataStore.subscribe(() => updateCircleData());
@@ -128,6 +132,14 @@
 
   function isCircleActive(circle) {
     return activeTimer && activeTimer.activeHabitId === habit.id && activeTimer.running && circle.isToday && habit.habit_type === 'timer';
+  }
+
+  function onCircleClick(circle) {
+    if (suppressNextClick) {
+      suppressNextClick = false;
+      return;
+    }
+    handleCircleClick(circle);
   }
 
   async function handleCircleClick(circle) {
@@ -263,14 +275,47 @@
       <button
         class="circle {circle.state ? 'circle-' + circle.state : ''} {circle.isToday ? 'circle-today' : ''}"
         class:circle-active={isCircleActive(circle)}
-        on:click={() => handleCircleClick(circle)}
+        on:click={() => onCircleClick(circle)}
         on:contextmenu={(e) => { if (habit.habit_type === 'timer' && circle.isToday) { e.preventDefault(); openTimeEditor(circle); } }}
         on:mousedown={(e) => { if (habit.habit_type === 'timer' && circle.isToday) { e.preventDefault(); startLongPress(circle); } }}
         on:mouseup={cancelLongPress}
         on:mouseleave={cancelLongPress}
-        on:touchstart={() => { if (habit.habit_type === 'timer' && circle.isToday) startLongPress(circle); }}
-        on:touchend={cancelLongPress}
-        on:touchcancel={cancelLongPress}
+        on:touchstart={(e) => {
+          if (habit.habit_type === 'timer' && circle.isToday) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+            touchMoved = false;
+            suppressNextClick = false;
+            startLongPress(circle);
+          }
+        }}
+        on:touchmove={(e) => {
+          if (!longPressTimer) return;
+          const touch = e.touches[0];
+          const dx = touch.clientX - touchStartX;
+          const dy = touch.clientY - touchStartY;
+          if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+            touchMoved = true;
+            cancelLongPress();
+          }
+        }}
+        on:touchend={() => {
+          cancelLongPress();
+          if (!wasLongPress && !touchMoved) {
+            suppressNextClick = true;
+            handleCircleClick(circle);
+          }
+          wasLongPress = false;
+          touchMoved = false;
+        }}
+        on:touchcancel={() => {
+          cancelLongPress();
+          wasLongPress = false;
+          touchMoved = false;
+          suppressNextClick = false;
+        }}
       >
         {circle.label || (isCircleActive(circle) ? liveLabel : circle.dayLetter)}
       </button>
