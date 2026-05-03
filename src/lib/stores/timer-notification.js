@@ -50,7 +50,7 @@ async function processState(state) {
 						id: "timer",
 						name: "Timer",
 						description: "Timer notification",
-						importance: Importance.High,
+						importance: Importance.Low,
 					});
 				} catch (e) {
 					// channel may already exist

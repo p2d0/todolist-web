@@ -1,5 +1,5 @@
 diff --git a/node_modules/@capawesome-team/capacitor-android-foreground-service/android/src/main/java/io/capawesome/capacitorjs/plugins/foregroundservice/AndroidForegroundService.java b/node_modules/@capawesome-team/capacitor-android-foreground-service/android/src/main/java/io/capawesome/capacitorjs/plugins/foregroundservice/AndroidForegroundService.java
-index 3df5ad5..1153e85 100644
+index 3df5ad5..cf08531 100644
 --- a/node_modules/@capawesome-team/capacitor-android-foreground-service/android/src/main/java/io/capawesome/capacitorjs/plugins/foregroundservice/AndroidForegroundService.java
 +++ b/node_modules/@capawesome-team/capacitor-android-foreground-service/android/src/main/java/io/capawesome/capacitorjs/plugins/foregroundservice/AndroidForegroundService.java
 @@ -1,6 +1,7 @@
@@ -28,7 +28,7 @@ index 3df5ad5..1153e85 100644
      @Nullable
      @Override
      public IBinder onBind(Intent intent) {
-@@ -23,54 +29,106 @@ public class AndroidForegroundService extends Service {
+@@ -23,54 +29,113 @@ public class AndroidForegroundService extends Service {
  
      @Override
      public int onStartCommand(Intent intent, int flags, int startId) {
@@ -69,7 +69,7 @@ index 3df5ad5..1153e85 100644
 +                    NotificationChannel fallbackChannel = new NotificationChannel(
 +                        channelId,
 +                        "Timer",
-+                        NotificationManager.IMPORTANCE_HIGH
++                        NotificationManager.IMPORTANCE_LOW
 +                    );
 +                    fallbackChannel.setDescription("Timer notification");
 +                    nm.createNotificationChannel(fallbackChannel);
@@ -100,7 +100,7 @@ index 3df5ad5..1153e85 100644
 -                );
 -                builder.setActions(actions);
 +                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-+                .setPriority(NotificationCompat.PRIORITY_HIGH)
++                .setPriority(NotificationCompat.PRIORITY_LOW)
 +                .setOnlyAlertOnce(true);
 +
 +            PendingIntent contentIntent = buildContentIntent(id);
@@ -111,15 +111,7 @@ index 3df5ad5..1153e85 100644
 -            Notification notification = builder.build();
 +            ArrayList<Bundle> buttonsBundle = notificationBundle.getParcelableArrayList("buttons");
 +            Log.d(TAG, "buttonsBundle=" + (buttonsBundle != null ? buttonsBundle.size() : "null"));
-             
--            if (ForegroundService.ACTION_UPDATE.equals(action)) {
--                NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
--                notificationManager.notify(id, notification);
--            } else {
--                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && serviceType != 0) {
--                    startForeground(id, notification, serviceType);
--                } else {
--                    startForeground(id, notification);
++            
 +            // Cache buttons when received, reuse on updates if JS sends empty array
 +            if (buttonsBundle != null && !buttonsBundle.isEmpty()) {
 +                cachedButtons = buttonsBundle;
@@ -143,27 +135,35 @@ index 3df5ad5..1153e85 100644
 +                        btnIntent,
 +                        PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
 +                    );
-+                    
+                     
+-            if (ForegroundService.ACTION_UPDATE.equals(action)) {
 +                    builder.addAction(android.R.drawable.ic_menu_close_clear_cancel, btnTitle, btnPendingIntent);
-                 }
++                }
 +            } else {
 +                Log.w(TAG, "No buttons in bundle");
 +            }
 +
 +            Notification notification = builder.build();
-+            Log.d(TAG, "Calling startForeground");
-+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && serviceType != 0) {
-+                startForeground(id, notification, serviceType);
-+            } else {
-+                startForeground(id, notification);
++            if (isUpdate) {
++                Log.d(TAG, "Calling NotificationManager.notify for update");
+                 NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                 notificationManager.notify(id, notification);
++                Log.d(TAG, "NotificationManager.notify succeeded");
+             } else {
++                Log.d(TAG, "Calling startForeground");
+                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && serviceType != 0) {
+                     startForeground(id, notification, serviceType);
+                 } else {
+                     startForeground(id, notification);
+                 }
++                Log.d(TAG, "startForeground succeeded");
              }
-+            Log.d(TAG, "startForeground succeeded");
          } catch (Exception exception) {
 +            Log.e(TAG, "Exception in onStartCommand: " + exception.getMessage(), exception);
              Logger.error(ForegroundServicePlugin.TAG, exception.getMessage(), exception);
          }
          return START_STICKY;
-@@ -91,25 +149,4 @@ public class AndroidForegroundService extends Service {
+@@ -91,25 +156,4 @@ public class AndroidForegroundService extends Service {
          }
          return PendingIntent.getActivity(getApplicationContext(), id, launchIntent, pendingIntentFlags);
      }
