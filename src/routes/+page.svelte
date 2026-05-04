@@ -1,5 +1,9 @@
 <script>
   import { onMount } from 'svelte';
+  import dayjs from 'dayjs';
+  import { base } from '$app/paths';
+  import { habitsStore, weekDataStore } from '$lib/stores/timer.js';
+  import { send } from '$lib/stores/sync.js';
   import TimerBanner from '$lib/components/TimerBanner.svelte';
   import HabitList from '$lib/components/HabitList.svelte';
   import WeekSummary from '$lib/components/WeekSummary.svelte';
@@ -7,10 +11,6 @@
   import BottomNav from '$lib/components/BottomNav.svelte';
   import FabButton from '$lib/components/FabButton.svelte';
   import StatsView from '$lib/components/StatsView.svelte';
-  import { base } from '$app/paths';
-  import { habitsStore, weekDataStore } from '$lib/stores/timer.js';
-  import { send } from '$lib/stores/sync.js';
-  import dayjs from 'dayjs';
 
   let showAddDialog = false;
   let editingHabit = null;
@@ -34,25 +34,36 @@
     habitsStore.set(res);
   }
 
+  function openAddDialog() {
+    editingHabit = null;
+    showAddDialog = true;
+  }
+
+  function openEditDialog(habit) {
+    editingHabit = habit;
+    showAddDialog = true;
+  }
+
+  async function deleteHabit(habit) {
+    if (!confirm(`Delete ${habit.description}?`)) return;
+    await fetch(`${base}/api/habits/${habit.id}`, { method: 'DELETE' });
+    send({ type: 'habits:update' });
+    await loadHabits();
+  }
+
   async function afterAddHabit() {
     showAddDialog = false;
     await loadHabits();
   }
 
-  async function afterDeleteHabit() {
-    send({ type: 'habits:update' });
-    await loadHabits();
-  }
-
   onMount(() => {
     loadHabits();
-    const onHabitsSync = () => loadHabits();
-    const onSessionsSync = () => loadHabits();
-    window.addEventListener('sync:habits', onHabitsSync);
-    window.addEventListener('sync:sessions', onSessionsSync);
+    const onSync = () => loadHabits();
+    window.addEventListener('sync:habits', onSync);
+    window.addEventListener('sync:sessions', onSync);
     return () => {
-      window.removeEventListener('sync:habits', onHabitsSync);
-      window.removeEventListener('sync:sessions', onSessionsSync);
+      window.removeEventListener('sync:habits', onSync);
+      window.removeEventListener('sync:sessions', onSync);
     };
   });
 </script>
@@ -61,7 +72,7 @@
   {#if activeTab === 'main'}
     <TimerBanner {habitsStore} />
     <WeekSummary {habitsStore} />
-    <HabitList {habitsStore} onAdd={() => { editingHabit = null; showAddDialog = true; }} onEdit={(habit) => { editingHabit = habit; showAddDialog = true; }} onDelete={(habit) => { if (confirm(`Delete ${habit.description}?`)) { fetch(`${base}/api/habits/${habit.id}`, { method: 'DELETE' }).then(() => afterDeleteHabit()); } }} />
+    <HabitList {habitsStore} onAdd={openAddDialog} onEdit={openEditDialog} onDelete={deleteHabit} />
   {:else}
     <StatsView />
   {/if}
@@ -73,7 +84,7 @@
 
 <BottomNav bind:activeTab showFab={activeTab === 'main'}>
   <svelte:fragment slot="fab">
-    <FabButton onClick={() => { editingHabit = null; showAddDialog = true; }} />
+    <FabButton onClick={openAddDialog} />
   </svelte:fragment>
 </BottomNav>
 

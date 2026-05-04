@@ -1,6 +1,6 @@
 import { json } from "@sveltejs/kit";
-import { getHabits } from "$lib/server/db";
 import {
+	getHabits,
 	getMonthlyMinutes,
 	getMonthlyCompletions,
 	getStreak,
@@ -38,16 +38,21 @@ export function GET({ url }) {
 		}
 		bestStreak = Math.max(bestStreak, streak);
 
+		let total: number;
+		if (habit.habit_type === "timer") {
+			total = minutes;
+		} else if (habit.habit_type === "boolean") {
+			total = completions;
+		} else {
+			const avg = completions > 0 ? daily.reduce((a, b) => a + b, 0) / completions : 0;
+			total = parseFloat(avg.toFixed(1));
+		}
+
 		return {
 			id: habit.id,
 			description: habit.description,
 			type: habit.habit_type,
-			total:
-				habit.habit_type === "timer"
-					? minutes
-						: habit.habit_type === "boolean"
-							? completions
-								: parseFloat((completions > 0 ? daily.reduce((a, b) => a + b, 0) / completions : 0).toFixed(1)),
+			total,
 			streak,
 			daily,
 		};

@@ -30,19 +30,15 @@ timerStore.stop = async () => {
 	const habits = get(habitsStore);
 	const habit = habits.find((h) => h.id === state.activeHabitId);
 	if (habit) {
-		try {
-			await fetch(`${base}/api/sessions`, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					habitId: habit.id,
-					date: dayjs().format("YYYY-MM-DD"),
-					durationSeconds: elapsed,
-				}),
-			});
-		} catch (e) {
-			console.error("Failed to save session:", e);
-		}
+		await fetch(`${base}/api/sessions`, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				habitId: habit.id,
+				date: dayjs().format("YYYY-MM-DD"),
+				durationSeconds: elapsed,
+			}),
+		});
 	}
 
 	timerStore.set({

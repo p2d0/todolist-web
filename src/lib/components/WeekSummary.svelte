@@ -1,13 +1,11 @@
 <script>
   import { onMount } from 'svelte';
-  import { weekDataStore } from '$lib/stores/timer.js';
   import { get } from 'svelte/store';
+  import { weekDataStore } from '$lib/stores/timer.js';
 
   export let habitsStore;
 
   let summary = '';
-
-  $: { if ($habitsStore.length > 0) computeSummary(); }
 
   function computeSummary() {
     const allRows = get(weekDataStore);
@@ -21,11 +19,12 @@
     summary = `${totalSessions} sessions, ${Math.floor(totalSeconds / 60)}m total, ${pomos.toFixed(1)} pomodoros`;
   }
 
+  $: if ($habitsStore.length > 0) computeSummary();
+
   onMount(() => {
-    const unsub = weekDataStore.subscribe(() => {
+    return weekDataStore.subscribe(() => {
       if ($habitsStore.length > 0) computeSummary();
     });
-    return unsub;
   });
 </script>
 

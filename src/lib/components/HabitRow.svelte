@@ -1,10 +1,10 @@
 <script>
-  import { base } from '$app/paths';
   import { onMount } from 'svelte';
+  import { get } from 'svelte/store';
   import dayjs from 'dayjs';
+  import { base } from '$app/paths';
   import { timerStore, weekDataStore } from '$lib/stores/timer.js';
   import { send } from '$lib/stores/sync.js';
-  import { get } from 'svelte/store';
   import TimeEditor from './TimeEditor.svelte';
   import NumberEditor from './NumberEditor.svelte';
 
@@ -131,7 +131,7 @@
   }
 
   function isCircleActive(circle) {
-    return activeTimer && activeTimer.activeHabitId === habit.id && activeTimer.running && circle.isToday && habit.habit_type === 'timer';
+    return activeTimer?.activeHabitId === habit.id && activeTimer?.running && circle.isToday && habit.habit_type === 'timer';
   }
 
   function onCircleClick(circle) {
@@ -253,22 +253,17 @@
     editingNumber = null;
   }
 
-  $: rowClass = habit.habit_type === 'timer' && activeTimer && activeTimer.activeHabitId === habit.id && activeTimer.running
-    ? 'habit-row active'
-    : 'habit-row';
+  $: isActiveRow = habit.habit_type === 'timer' && activeTimer?.activeHabitId === habit.id && activeTimer?.running;
+  $: rowClass = isActiveRow ? 'habit-row active' : 'habit-row';
 
-  $: liveLabel = (() => {
-    if (habit.habit_type !== 'timer' || !activeTimer || activeTimer.activeHabitId !== habit.id || !activeTimer.running) return '';
-    const secs = getElapsed();
-    return formatDuration(secs);
-  })();
+  $: liveLabel = isActiveRow ? formatDuration(getElapsed()) : '';
 </script>
 
 <div class={rowClass}>
   <div class="habit-header">
     <span class="habit-desc">{habit.description}</span>
-    <button class="edit-btn" on:click={() => onEdit && onEdit(habit)} aria-label="Edit habit">✏️</button>
-    <button class="edit-btn delete-btn" on:click={() => onDelete && onDelete(habit)} aria-label="Delete habit">🗑</button>
+    <button class="edit-btn" on:click={() => onEdit?.(habit)} aria-label="Edit habit">✏️</button>
+    <button class="edit-btn delete-btn" on:click={() => onDelete?.(habit)} aria-label="Delete habit">🗑</button>
   </div>
   <div class="circles-row">
     {#each circles as circle (circle.date)}
@@ -276,48 +271,54 @@
         class="circle {circle.state ? 'circle-' + circle.state : ''} {circle.isToday ? 'circle-today' : ''}"
         class:circle-active={isCircleActive(circle)}
         on:click={() => onCircleClick(circle)}
-        on:contextmenu={(e) => { if (habit.habit_type === 'timer' && circle.isToday) { e.preventDefault(); openTimeEditor(circle); } }}
-        on:mousedown={(e) => { if (habit.habit_type === 'timer' && circle.isToday) { e.preventDefault(); startLongPress(circle); } }}
+        on:contextmenu={(e) => {
+        if (habit.habit_type !== 'timer' || !circle.isToday) return;
+        e.preventDefault();
+        openTimeEditor(circle);
+      }}
+        on:mousedown={(e) => {
+        if (habit.habit_type !== 'timer' || !circle.isToday) return;
+        e.preventDefault();
+        startLongPress(circle);
+      }}
         on:mouseup={cancelLongPress}
         on:mouseleave={cancelLongPress}
         on:touchstart={(e) => {
-          if (habit.habit_type === 'timer' && circle.isToday) {
-            e.preventDefault();
-            const touch = e.touches[0];
-            touchStartX = touch.clientX;
-            touchStartY = touch.clientY;
-            touchMoved = false;
-            suppressNextClick = false;
-            startLongPress(circle);
-          }
-        }}
+        if (habit.habit_type !== 'timer' || !circle.isToday) return;
+        e.preventDefault();
+        const touch = e.touches[0];
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+        touchMoved = false;
+        suppressNextClick = false;
+        startLongPress(circle);
+      }}
         on:touchmove={(e) => {
-          if (!longPressTimer) return;
-          const touch = e.touches[0];
-          const dx = touch.clientX - touchStartX;
-          const dy = touch.clientY - touchStartY;
-          if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
-            touchMoved = true;
-            cancelLongPress();
-          }
-        }}
+        if (!longPressTimer) return;
+        const touch = e.touches[0];
+        const dx = touch.clientX - touchStartX;
+        const dy = touch.clientY - touchStartY;
+        if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+          touchMoved = true;
+          cancelLongPress();
+        }
+      }}
         on:touchend={() => {
-          cancelLongPress();
-          if (habit.habit_type === 'timer' && circle.isToday) {
-            if (!wasLongPress && !touchMoved) {
-              handleCircleClick(circle);
-            }
-            suppressNextClick = true;
-            wasLongPress = false;
-            touchMoved = false;
-          }
-        }}
+        cancelLongPress();
+        if (habit.habit_type !== 'timer' || !circle.isToday) return;
+        if (!wasLongPress && !touchMoved) {
+          handleCircleClick(circle);
+        }
+        suppressNextClick = true;
+        wasLongPress = false;
+        touchMoved = false;
+      }}
         on:touchcancel={() => {
-          cancelLongPress();
-          wasLongPress = false;
-          touchMoved = false;
-          suppressNextClick = false;
-        }}
+        cancelLongPress();
+        wasLongPress = false;
+        touchMoved = false;
+        suppressNextClick = false;
+      }}
       >
         {circle.label || (isCircleActive(circle) ? liveLabel : circle.dayLetter)}
       </button>
@@ -344,9 +345,6 @@
     />
   {/if}
 </div>
-
-  
-
 
 <style>
   .habit-row {

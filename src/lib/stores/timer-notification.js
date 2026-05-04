@@ -20,6 +20,21 @@ function formatTime(seconds) {
 	return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 }
 
+function getElapsedSeconds(state) {
+	if (!state.startTime) return state.elapsedBefore || 0;
+	return Math.floor((Date.now() - state.startTime) / 1000) + state.elapsedBefore;
+}
+
+function getNotificationBody(state) {
+	const elapsed = getElapsedSeconds(state);
+	const isPomodoro = state.mode === "timed";
+	const pomodoroDuration = 1500;
+	if (isPomodoro) {
+		return `Remaining: ${formatTime(Math.max(0, pomodoroDuration - elapsed))}`;
+	}
+	return `Running: ${formatTime(elapsed)}`;
+}
+
 async function processState(state) {
 	console.log("processState: running=" + state.running + " serviceRunning=" + serviceRunning);
 	if (isProcessing) {
@@ -35,15 +50,7 @@ async function processState(state) {
 				const habits = get(habitsStore);
 				const habit = habits.find((h) => h.id === state.activeHabitId);
 				const title = habit ? habit.description : "PomoTasker";
-				const elapsed = state.startTime
-					? Math.floor((Date.now() - state.startTime) / 1000) +
-						state.elapsedBefore
-					: state.elapsedBefore || 0;
-				const isPomodoro = state.mode === 'timed';
-				const pomodoroDuration = 1500; // 25 minutes
-				const body = isPomodoro
-					? `Remaining: ${formatTime(Math.max(0, pomodoroDuration - elapsed))}`
-					: `Running: ${formatTime(elapsed)}`;
+				const body = getNotificationBody(state);
 
 				try {
 					await ForegroundService.createNotificationChannel({
@@ -66,7 +73,6 @@ async function processState(state) {
 					notificationChannelId: "timer",
 				});
 
-				// Start the update interval
 				if (updateInterval) {
 					console.log("Clearing existing interval");
 					clearInterval(updateInterval);
@@ -79,38 +85,26 @@ async function processState(state) {
 						updateInterval = null;
 						return;
 					}
-				const e = s.startTime
-					? Math.floor((Date.now() - s.startTime) / 1000) + s.elapsedBefore
-					: s.elapsedBefore || 0;
-				const isPomodoroUpdate = s.mode === 'timed';
-				const pomodoroDurationUpdate = 1500;
-				const body = isPomodoroUpdate
-					? `Remaining: ${formatTime(Math.max(0, pomodoroDurationUpdate - e))}`
-					: `Running: ${formatTime(e)}`;
-			try {
-				const habits = get(habitsStore);
-				const habit = habits.find((h) => h.id === s.activeHabitId);
-				const title = habit ? habit.description : "PomoTasker";
-				await ForegroundService.updateForegroundService({
-					id: 1,
-					title,
-					body,
-					smallIcon: "ic_stat_icon_config_sample",
-					notificationChannelId: "timer",
-					silent: true,
-				});
-					// Poll for pending background button clicks
+					const habits = get(habitsStore);
+					const habit = habits.find((h) => h.id === s.activeHabitId);
+					const title = habit ? habit.description : "PomoTasker";
+					const body = getNotificationBody(s);
 					try {
+						await ForegroundService.updateForegroundService({
+							id: 1,
+							title,
+							body,
+							smallIcon: "ic_stat_icon_config_sample",
+							notificationChannelId: "timer",
+							silent: true,
+						});
 						const pending = await ForegroundService.checkPendingButtonClick();
 						if (pending && pending.buttonId === 1) {
 							await timerStore.stop();
 						}
-					} catch (pollErr) {
-						// ignore
+					} catch (e) {
+						console.error("Update notification error:", e);
 					}
-				} catch (e) {
-					console.error("Update notification error:", e);
-				}
 				}, 1000);
 			}
 		} else {
