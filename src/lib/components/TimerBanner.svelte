@@ -13,6 +13,7 @@
   let modeBtnText = 'S';
 
   let timerInterval = null;
+  let completing = false;
 
   // Notification
   let notifPermission = 'default';
@@ -131,16 +132,22 @@
   }
 
   async function onPomodoroComplete() {
-    if (Notification.permission === 'granted') {
-      showNotif('Pomodoro complete!', {
-        body: 'Pomodoro session finished!',
-        icon: `${base}/icons/icon-192.png`,
-        tag: 'pomodoro-done',
-        vibrate: [200, 100, 200],
-        data: { type: 'pomodoro-done' },
-      });
+    if (completing) return;
+    completing = true;
+    try {
+      if (Notification.permission === 'granted') {
+        await showNotif('Pomodoro complete!', {
+          body: 'Pomodoro session finished!',
+          icon: `${base}/icons/icon-192.png`,
+          tag: 'pomodoro-done',
+          vibrate: [200, 100, 200],
+          data: { type: 'pomodoro-done' },
+        });
+      }
+      await stopTimer();
+    } finally {
+      completing = false;
     }
-    await stopTimer();
   }
 
   $: notifIcon = (() => {
