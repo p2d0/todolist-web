@@ -159,9 +159,13 @@
             </div>
             <div class="habit-stat-meta">
               <span class="habit-stat-total">
-                {habit.type === 'timer' ? `${Math.floor(totalVal / 60)}m` :
-                 habit.type === 'boolean' ? `${totalVal}x` :
-                 `avg ${totalVal}`}
+                {#if habit.type === 'timer'}
+                  {Math.floor(totalVal / 60)}m
+                {:else if habit.type === 'boolean'}
+                  {totalVal}x
+                {:else}
+                  avg {totalVal}
+                {/if}
               </span>
               {#if habit.streak > 0}
                 <span class="habit-stat-streak">🔥 {habit.streak}</span>

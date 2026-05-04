@@ -1,9 +1,9 @@
 <script>
-  import { base } from '$app/paths';
-  import HabitRow from './HabitRow.svelte';
   import { onMount } from 'svelte';
-  import { hideCompletedStore, weekDataStore } from '$lib/stores/timer.js';
   import dayjs from 'dayjs';
+  import { base } from '$app/paths';
+  import { hideCompletedStore, weekDataStore } from '$lib/stores/timer.js';
+  import HabitRow from './HabitRow.svelte';
 
   export let habitsStore;
   export let onEdit = null;
@@ -50,6 +50,14 @@
     habitsStore.set(data);
   }
 
+  function isHabitCompleted(habit, row) {
+    if (!row) return false;
+    if (habit.habit_type === 'boolean') return true;
+    if (habit.habit_type === 'timer') return row.duration_seconds > 0;
+    if (habit.habit_type === 'number') return (row.value ?? 0) >= (habit.min_value || 0);
+    return false;
+  }
+
   async function checkCompleted() {
     const today = dayjs().format('YYYY-MM-DD');
     const { startDate, endDate } = getWeekRange();
@@ -59,19 +67,10 @@
     const results = {};
     for (const h of habits) {
       const row = allRows.find(r => r.habit_id === h.id && r.date === today);
-      if (h.habit_type === 'boolean') {
-        results[h.id] = row ? true : false;
-      } else if (h.habit_type === 'timer') {
-        results[h.id] = row ? row.duration_seconds > 0 : false;
-      } else if (h.habit_type === 'number') {
-        results[h.id] = row ? (row.value ?? 0) >= (h.min_value || 0) : false;
-      } else {
-        results[h.id] = false;
-      }
+      results[h.id] = isHabitCompleted(h, row);
     }
     completedIds = results;
     completedLoaded = true;
-    // Also refresh weekDataStore so HabitRow circles show fresh data
     weekDataStore.set(allRows);
   }
 
@@ -248,10 +247,6 @@
 
   .habit-wrapper:active {
     cursor: grabbing;
-  }
-
-  .habit-wrapper.dragging {
-    opacity: 0.25;
   }
 
   .habit-wrapper.dragging {

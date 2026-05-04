@@ -1,7 +1,7 @@
 <script>
+  import { createEventDispatcher } from 'svelte';
   import { base } from '$app/paths';
   import { send } from '$lib/stores/sync.js';
-  import { createEventDispatcher } from 'svelte';
 
   const dispatch = createEventDispatcher();
 

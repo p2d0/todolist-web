@@ -1,10 +1,11 @@
 <script>
+  import { onMount } from 'svelte';
+  import { get } from 'svelte/store';
   import { base } from '$app/paths';
   import { timerStore } from '$lib/stores/timer.js';
   import { send } from '$lib/stores/sync.js';
-  import { get } from 'svelte/store';
+
   export let habitsStore;
-  import { onMount } from 'svelte';
 
   let activeTimer = null;
   let habits = [];
@@ -29,16 +30,12 @@
 
   async function showNotif(title, opts) {
     if (Notification.permission !== 'granted') return;
-    try {
-      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        const reg = await navigator.serviceWorker.ready;
-        await reg.showNotification(title, opts);
-      } else {
-        new Notification(title, opts);
-      }
-    } catch (err) {
-      console.error('Notification error:', err);
-      try { new Notification(title, opts); } catch (_) {}
+
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      const reg = await navigator.serviceWorker.ready;
+      reg.showNotification(title, opts);
+    } else {
+      new Notification(title, opts);
     }
   }
 
@@ -139,7 +136,11 @@
     await stopTimer();
   }
 
-  $: notifIcon = notifPermission === 'granted' ? '🔔' : notifPermission === 'denied' ? '🔕' : '🔔?';
+  $: notifIcon = (() => {
+    if (notifPermission === 'granted') return '🔔';
+    if (notifPermission === 'denied') return '🔕';
+    return '🔔?';
+  })();
   $: isActive = activeTimer?.running;
   $: activeHabitName = activeTimer?.activeHabitId
     ? habits.find(h => h.id === activeTimer.activeHabitId)?.description || ''

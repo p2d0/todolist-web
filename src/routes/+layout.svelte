@@ -1,8 +1,8 @@
 <script>
+  import { onMount } from 'svelte';
   import { base } from '$app/paths';
   import { initSync } from '$lib/stores/sync.js';
   import { initTimerNotification } from '$lib/stores/timer-notification.js';
-  import { onMount } from 'svelte';
 
   if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
     navigator.serviceWorker.register(`${base}/sw/service-worker.js`).then(() => {
