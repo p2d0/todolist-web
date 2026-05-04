@@ -30,7 +30,10 @@
   }
 
   async function showNotif(title, opts) {
-    if (Notification.permission !== 'granted') return;
+    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') {
+      console.log('Notification skipped: permission=' + (typeof Notification === 'undefined' ? 'unsupported' : Notification.permission));
+      return;
+    }
 
     try {
       if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
@@ -39,11 +42,15 @@
       } else {
         new Notification(title, opts);
       }
+      console.log('Notification shown:', title);
     } catch (err) {
       console.error('Notification error:', err);
       try {
         new Notification(title, opts);
-      } catch (_) {}
+        console.log('Notification shown (fallback):', title);
+      } catch (fallbackErr) {
+        console.error('Notification fallback failed:', fallbackErr);
+      }
     }
   }
 
@@ -60,8 +67,20 @@
   }
 
   const tUnsub = timerStore.subscribe(v => {
+    const wasRunning = activeTimer?.running;
     activeTimer = v;
     modeBtnText = v.mode === 'timed' ? 'P' : 'S';
+
+    if (!wasRunning && v.running) {
+      const habit = habits.find(h => h.id === v.activeHabitId);
+      if (habit) {
+        showNotif('PomoTasker', {
+          body: `Timer started: ${habit.description}`,
+          icon: `${base}/icons/icon-192.png`,
+          tag: 'timer-start',
+        });
+      }
+    }
   });
 
   const hUnsub = habitsStore.subscribe(v => habits = v);
@@ -135,15 +154,13 @@
     if (completing) return;
     completing = true;
     try {
-      if (Notification.permission === 'granted') {
-        await showNotif('Pomodoro complete!', {
-          body: 'Pomodoro session finished!',
-          icon: `${base}/icons/icon-192.png`,
-          tag: 'pomodoro-done',
-          vibrate: [200, 100, 200],
-          data: { type: 'pomodoro-done' },
-        });
-      }
+      showNotif('Pomodoro complete!', {
+        body: 'Pomodoro session finished!',
+        icon: `${base}/icons/icon-192.png`,
+        tag: 'pomodoro-done',
+        vibrate: [200, 100, 200],
+        data: { type: 'pomodoro-done' },
+      });
       await stopTimer();
     } finally {
       completing = false;
