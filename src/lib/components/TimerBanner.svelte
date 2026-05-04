@@ -31,11 +31,18 @@
   async function showNotif(title, opts) {
     if (Notification.permission !== 'granted') return;
 
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      const reg = await navigator.serviceWorker.ready;
-      reg.showNotification(title, opts);
-    } else {
-      new Notification(title, opts);
+    try {
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        const reg = await navigator.serviceWorker.ready;
+        await reg.showNotification(title, opts);
+      } else {
+        new Notification(title, opts);
+      }
+    } catch (err) {
+      console.error('Notification error:', err);
+      try {
+        new Notification(title, opts);
+      } catch (_) {}
     }
   }
 
