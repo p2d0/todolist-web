@@ -20,17 +20,13 @@ export const timerStore = writable({
 	elapsedBefore: 0,
 });
 
-let stopping = false;
-
 timerStore.stop = async () => {
-	if (stopping) return 0;
-	stopping = true;
-	try {
-		const state = get(timerStore);
-		if (!state?.running) return 0;
-		const elapsed = state.startTime
-			? Math.floor((Date.now() - state.startTime) / 1000) + state.elapsedBefore
-			: state.elapsedBefore || 0;
+	const state = get(timerStore);
+	if (!state?.running) return 0;
+
+	const elapsed = state.startTime
+		? Math.floor((Date.now() - state.startTime) / 1000) + state.elapsedBefore
+		: state.elapsedBefore || 0;
 
 	const habits = get(habitsStore);
 	const habit = habits.find((h) => h.id === state.activeHabitId);
@@ -50,19 +46,16 @@ timerStore.stop = async () => {
 		}
 	}
 
-		timerStore.set({
-			activeHabitId: null,
-			mode: state.mode,
-			elapsed: 0,
-			running: false,
-			startTime: null,
-			elapsedBefore: 0,
-		});
-		send({ type: "timer:update", data: get(timerStore) });
-		send({ type: "sessions:update" });
-		window.dispatchEvent(new CustomEvent("sync:sessions"));
-		return elapsed;
-	} finally {
-		stopping = false;
-	}
+	timerStore.set({
+		activeHabitId: null,
+		mode: state.mode,
+		elapsed: 0,
+		running: false,
+		startTime: null,
+		elapsedBefore: 0,
+	});
+	send({ type: "timer:update", data: get(timerStore) });
+	send({ type: "sessions:update" });
+	window.dispatchEvent(new CustomEvent("sync:sessions"));
+	return elapsed;
 };
