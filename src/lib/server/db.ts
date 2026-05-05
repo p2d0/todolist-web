@@ -14,12 +14,23 @@ export function getDb() {
 		db = new Database(dbPath);
 		db.pragma("journal_mode = WAL");
 		initSchema(db);
+		migrateGroups(db);
+		migrateArchive(db);
 	}
 	return db;
 }
 
 function initSchema(db) {
 	db.exec(`
+    CREATE TABLE IF NOT EXISTS groups (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      icon TEXT,
+      color TEXT,
+      order_index INTEGER NOT NULL DEFAULT 0,
+      collapsed INTEGER NOT NULL DEFAULT 0
+    );
+
     CREATE TABLE IF NOT EXISTS habits (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       description TEXT NOT NULL,
@@ -27,7 +38,9 @@ function initSchema(db) {
       timer_duration_seconds INTEGER NOT NULL DEFAULT 1500,
       mode TEXT NOT NULL DEFAULT 'stopwatch',
       habit_type TEXT NOT NULL DEFAULT 'timer',
-      min_value INTEGER
+      min_value INTEGER,
+      group_id INTEGER,
+      archived_at TEXT
     );
 
     CREATE TABLE IF NOT EXISTS sessions (
@@ -44,45 +57,269 @@ function initSchema(db) {
   `);
 }
 
-// --- Habits ---
-
-export function getHabits() {
-	const db = getDb();
-	const stmt = db.prepare("SELECT * FROM habits ORDER BY order_index ASC");
-	return stmt.all();
+function migrateArchive(db) {
+	const cols = db.prepare("PRAGMA table_info(habits)").all();
+	const hasArchivedAt = cols.some((c) => c.name === "archived_at");
+	if (!hasArchivedAt) {
+		db.exec("ALTER TABLE habits ADD COLUMN archived_at TEXT");
+	}
 }
 
-export function addHabit(description, habitType, minValue) {
+function migrateGroups(db) {
+	// Check if groups table exists (it should due to initSchema, but be safe)
+	const groupsTable = db
+		.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='groups'")
+		.get();
+	if (!groupsTable) {
+		db.exec(`
+      CREATE TABLE groups (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        icon TEXT,
+        color TEXT,
+        order_index INTEGER NOT NULL DEFAULT 0,
+        collapsed INTEGER NOT NULL DEFAULT 0
+      );
+    `);
+	}
+
+	// Check if habits.group_id column exists
+	const cols = db.prepare("PRAGMA table_info(habits)").all();
+	const hasGroupId = cols.some((c) => c.name === "group_id");
+	if (!hasGroupId) {
+		db.exec("ALTER TABLE habits ADD COLUMN group_id INTEGER");
+	}
+
+	// Create default group if none exist
+	const defaultGroup = db
+		.prepare("SELECT * FROM groups WHERE name = 'General'")
+		.get();
+	let defaultGroupId;
+	if (!defaultGroup) {
+		const result = db
+			.prepare(
+				"INSERT INTO groups (name, order_index, collapsed) VALUES ('General', 0, 0)",
+			)
+			.run();
+		defaultGroupId = result.lastInsertRowid;
+	} else {
+		defaultGroupId = defaultGroup.id;
+	}
+
+	// Assign all ungrouped habits to default group
+	const ungrouped = db
+		.prepare("SELECT COUNT(*) as cnt FROM habits WHERE group_id IS NULL")
+		.get();
+	if (ungrouped.cnt > 0) {
+		db.prepare("UPDATE habits SET group_id = ? WHERE group_id IS NULL").run(
+			defaultGroupId,
+		);
+	}
+}
+
+// --- Groups ---
+
+export function getGroups() {
+	const db = getDb();
+	return db.prepare("SELECT * FROM groups ORDER BY order_index ASC").all();
+}
+
+export function getGroup(id) {
+	const db = getDb();
+	return db.prepare("SELECT * FROM groups WHERE id = ?").get(id);
+}
+
+export function addGroup(name, icon, color) {
 	const db = getDb();
 	const maxOrder = db
-		.prepare("SELECT MAX(order_index) as max FROM habits")
+		.prepare("SELECT MAX(order_index) as max FROM groups")
 		.get();
 	const orderIndex = (maxOrder?.max ?? -1) + 1;
 	const result = db
 		.prepare(
-			"INSERT INTO habits (description, order_index, habit_type, min_value) VALUES (?, ?, ?, ?)",
+			"INSERT INTO groups (name, icon, color, order_index, collapsed) VALUES (?, ?, ?, ?, 0)",
 		)
-		.run(description, orderIndex, habitType, minValue);
+		.run(name, icon || null, color || null, orderIndex);
 	return result.lastInsertRowid;
 }
 
-export function updateHabit(id, description, habitType, minValue) {
+export function updateGroup(id, name, icon, color) {
 	const db = getDb();
 	db.prepare(
-		"UPDATE habits SET description = ?, habit_type = ?, min_value = ? WHERE id = ?",
-	).run(description, habitType, minValue, id);
+		"UPDATE groups SET name = ?, icon = ?, color = ? WHERE id = ?",
+	).run(name, icon, color, id);
 }
 
-export function reorderHabits(orderedIds: any[]) {
+export function updateGroupCollapsed(id, collapsed) {
 	const db = getDb();
-	for (const [i, id] of orderedIds.entries()) {
-		db.prepare("UPDATE habits SET order_index = ? WHERE id = ?").run(i, id);
+	db.prepare("UPDATE groups SET collapsed = ? WHERE id = ?").run(
+		collapsed ? 1 : 0,
+		id,
+	);
+}
+
+export function updateGroupOrder(id, orderIndex) {
+	const db = getDb();
+	// Shift others to make room
+	db.prepare(
+		"UPDATE groups SET order_index = order_index + 1 WHERE order_index >= ? AND id != ?",
+	).run(orderIndex, id);
+	db.prepare("UPDATE groups SET order_index = ? WHERE id = ?").run(
+		orderIndex,
+		id,
+	);
+}
+
+export function deleteGroup(id) {
+	const db = getDb();
+	const defaultGroup = db
+		.prepare("SELECT id FROM groups WHERE name = 'General'")
+		.get();
+	const targetId = defaultGroup?.id ?? id;
+	// Move habits to default group
+	db.prepare("UPDATE habits SET group_id = ? WHERE group_id = ?").run(
+		targetId,
+		id,
+	);
+	db.prepare("DELETE FROM groups WHERE id = ?").run(id);
+}
+
+export function getDefaultGroup() {
+	const db = getDb();
+	return db.prepare("SELECT * FROM groups WHERE name = 'General'").get();
+}
+
+// --- Habits ---
+
+export function getAllHabits() {
+	const db = getDb();
+	return db
+		.prepare("SELECT * FROM habits ORDER BY group_id, order_index ASC")
+		.all();
+}
+
+export function getActiveHabits() {
+	const db = getDb();
+	return db
+		.prepare("SELECT * FROM habits WHERE archived_at IS NULL ORDER BY group_id, order_index ASC")
+		.all();
+}
+
+export function getHabitsTree() {
+	const db = getDb();
+	const groups = db
+		.prepare("SELECT * FROM groups ORDER BY order_index ASC")
+		.all();
+	const habits = db
+		.prepare("SELECT * FROM habits WHERE archived_at IS NULL ORDER BY group_id, order_index ASC")
+		.all();
+
+	const groupMap = new Map();
+	for (const g of groups) {
+		groupMap.set(g.id, { ...g, habits: [] });
 	}
+	for (const h of habits) {
+		const g = groupMap.get(h.group_id);
+		if (g) {
+			g.habits.push(h);
+		}
+	}
+	return Array.from(groupMap.values());
+}
+
+export function getArchivedHabits() {
+	const db = getDb();
+	return db
+		.prepare(`
+			SELECT h.*, g.name as group_name
+			FROM habits h
+			LEFT JOIN groups g ON h.group_id = g.id
+			WHERE h.archived_at IS NOT NULL
+			ORDER BY h.archived_at DESC
+		`)
+		.all();
+}
+
+export function addHabit(description, habitType, minValue, groupId) {
+	const db = getDb();
+	const gid = groupId ?? getDefaultGroup()?.id ?? null;
+	const maxOrder = db
+		.prepare("SELECT MAX(order_index) as max FROM habits WHERE group_id = ?")
+		.get(gid);
+	const orderIndex = (maxOrder?.max ?? -1) + 1;
+	const result = db
+		.prepare(
+			"INSERT INTO habits (description, order_index, habit_type, min_value, group_id) VALUES (?, ?, ?, ?, ?)",
+		)
+		.run(description, orderIndex, habitType, minValue, gid);
+	return result.lastInsertRowid;
+}
+
+export function updateHabit(id, description, habitType, minValue, groupId) {
+	const db = getDb();
+	const existing = db.prepare("SELECT * FROM habits WHERE id = ?").get(id);
+	const gid = groupId ?? existing?.group_id ?? getDefaultGroup()?.id ?? null;
+
+	// If group changed, append to end of new group
+	if (gid !== existing?.group_id) {
+		const maxOrder = db
+			.prepare(
+				"SELECT MAX(order_index) as max FROM habits WHERE group_id = ?",
+			)
+			.get(gid);
+		const newOrder = (maxOrder?.max ?? -1) + 1;
+		db.prepare(
+			"UPDATE habits SET description = ?, habit_type = ?, min_value = ?, group_id = ?, order_index = ? WHERE id = ?",
+		).run(description, habitType, minValue, gid, newOrder, id);
+	} else {
+		db.prepare(
+			"UPDATE habits SET description = ?, habit_type = ?, min_value = ? WHERE id = ?",
+		).run(description, habitType, minValue, id);
+	}
+}
+
+export function updateHabitOrder(id, groupId, orderIndex) {
+	const db = getDb();
+	// Shift others in target group to make room
+	db.prepare(
+		"UPDATE habits SET order_index = order_index + 1 WHERE group_id = ? AND order_index >= ? AND id != ?",
+	).run(groupId, orderIndex, id);
+	db.prepare("UPDATE habits SET group_id = ?, order_index = ? WHERE id = ?").run(
+		groupId,
+		orderIndex,
+		id,
+	);
 }
 
 export function deleteHabit(id) {
 	const db = getDb();
 	db.prepare("DELETE FROM habits WHERE id = ?").run(id);
+}
+
+export function archiveHabit(id) {
+	const db = getDb();
+	const now = new Date().toISOString().replace("T", " ").substring(0, 19);
+	db.prepare("UPDATE habits SET archived_at = ? WHERE id = ?").run(now, id);
+}
+
+export function unarchiveHabit(id) {
+	const db = getDb();
+	const habit = db.prepare("SELECT * FROM habits WHERE id = ?").get(id);
+	if (!habit) return;
+	let gid = habit.group_id;
+	// If original group no longer exists, fallback to General
+	if (gid) {
+		const group = db.prepare("SELECT id FROM groups WHERE id = ?").get(gid);
+		if (!group) {
+			const general = db.prepare("SELECT id FROM groups WHERE name = 'General'").get();
+			gid = general?.id ?? null;
+		}
+	}
+	if (!gid) {
+		const general = db.prepare("SELECT id FROM groups WHERE name = 'General'").get();
+		gid = general?.id ?? null;
+	}
+	db.prepare("UPDATE habits SET archived_at = NULL, group_id = ? WHERE id = ?").run(gid, id);
 }
 
 export function getHabit(id) {

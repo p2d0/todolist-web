@@ -80,27 +80,37 @@ def get_lines():
 
 def get_all_buttons(habit_name):
     lines = get_lines()
-    idx = None
+    matches = []
     for i, line in enumerate(lines):
-        if habit_name in line: idx = i; break
-    if idx is None: return []
-    ni = len(lines[idx]) - len(lines[idx].lstrip())
-    ci = ni - 2; cl = None
-    for j in range(idx + 1, len(lines)):
-        nl = lines[j]; nli = len(nl) - len(nl.lstrip()) if nl.strip() else 999
-        if nli == ci and "generic [ref=" in nl and nl.strip().startswith("- generic"):
-            cl = j; break
-        if nli <= ni - 4 and nl.strip(): break
-    if cl is None: return []
-    btns = []
-    for j in range(cl + 1, len(lines)):
-        nl = lines[j]; nli = len(nl) - len(nl.lstrip()) if nl.strip() else 999
-        if "button" in nl and "ref=" in nl and nli > ci:
-            m = re.search(r'button "([^"]+)"', nl)
-            m2 = re.search(r"ref=(e\d+)", nl)
-            btns.append((m.group(1) if m else "?", m2.group(1) if m2 else None))
-        if nli <= ci and nl.strip(): break
-    return btns
+        if re.search(rf":\s*{re.escape(habit_name)}\s*$", line) and "generic [ref=" in line:
+            for j in range(i + 1, min(i + 4, len(lines))):
+                if "Edit habit" in lines[j] or "Delete habit" in lines[j]:
+                    matches.append(i)
+                    break
+    for idx in matches:
+        name_indent = len(lines[idx]) - len(lines[idx].lstrip())
+        circles_indent = name_indent - 2
+        circles_line = None
+        for j in range(idx + 1, len(lines)):
+            nl = lines[j]
+            nli = len(nl) - len(nl.lstrip()) if nl.strip() else 999
+            if nli == circles_indent and "generic [ref=" in nl and nl.strip().startswith("- generic"):
+                circles_line = j; break
+            if nli <= name_indent - 4 and nl.strip(): break
+        if circles_line is None:
+            continue
+        btns = []
+        for j in range(circles_line + 1, len(lines)):
+            nl = lines[j]
+            nli = len(nl) - len(nl.lstrip()) if nl.strip() else 999
+            if "button" in nl and "ref=" in nl and nli > circles_indent:
+                m = re.search(r'button "([^"]+)"', nl)
+                m2 = re.search(r"ref=(e\d+)", nl)
+                btns.append((m.group(1) if m else "?", m2.group(1) if m2 else None))
+            if nli <= circles_indent and nl.strip(): break
+        if btns:
+            return btns
+    return []
 
 
 def main():

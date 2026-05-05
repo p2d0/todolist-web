@@ -1,6 +1,6 @@
 import { json } from "@sveltejs/kit";
 import {
-	getHabits,
+	getActiveHabits,
 	getMonthlyMinutes,
 	getMonthlyCompletions,
 	getStreak,
@@ -13,7 +13,7 @@ export function GET({ url }) {
 		return json({ error: "Missing month" }, { status: 400 });
 	}
 
-	const habits = getHabits();
+	const habits = getActiveHabits();
 	const daysInMonth = new Date(
 		parseInt(month.split("-")[0]),
 		parseInt(month.split("-")[1]),

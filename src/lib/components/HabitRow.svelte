@@ -10,7 +10,7 @@
 
   export let habit;
   export let onEdit = null;
-  export let onDelete = null;
+  export let onArchive = null;
 
   let circles = [];
   let activeTimer = null;
@@ -263,7 +263,7 @@
   <div class="habit-header">
     <span class="habit-desc">{habit.description}</span>
     <button class="edit-btn" on:click={() => onEdit?.(habit)} aria-label="Edit habit">✏️</button>
-    <button class="edit-btn delete-btn" on:click={() => onDelete?.(habit)} aria-label="Delete habit">🗑</button>
+    <button class="edit-btn delete-btn" on:click={() => onArchive?.(habit)} aria-label="Delete habit">🗑</button>
   </div>
   <div class="circles-row">
     {#each circles as circle (circle.date)}
