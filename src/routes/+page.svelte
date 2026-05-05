@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import dayjs from 'dayjs';
   import { base } from '$app/paths';
-  import { habitsStore, weekDataStore } from '$lib/stores/timer.js';
+  import { groupsStore, habitsStore, weekDataStore } from '$lib/stores/timer.js';
   import { send } from '$lib/stores/sync.js';
   import TimerBanner from '$lib/components/TimerBanner.svelte';
   import HabitList from '$lib/components/HabitList.svelte';
@@ -24,14 +24,14 @@
     return { startDate: monday.format('YYYY-MM-DD'), endDate: sunday.format('YYYY-MM-DD') };
   }
 
-  async function loadHabits() {
+  async function loadData() {
     const { startDate, endDate } = getWeekRange();
-    const [res, data] = await Promise.all([
+    const [treeRes, data] = await Promise.all([
       fetch(`${base}/api/habits`).then(r => r.json()),
       fetch(`${base}/api/sessions?type=weekdata&startDate=${startDate}&endDate=${endDate}`).then(r => r.json()),
     ]);
     weekDataStore.set(data.rows);
-    habitsStore.set(res);
+    groupsStore.set(treeRes);
   }
 
   function openAddDialog() {
@@ -44,21 +44,34 @@
     showAddDialog = true;
   }
 
-  async function deleteHabit(habit) {
-    if (!confirm(`Delete ${habit.description}?`)) return;
+  async function archiveHabit(habit) {
+    if (!confirm(`Archive ${habit.description}?`)) return;
+    await fetch(`${base}/api/habits/${habit.id}/archive`, { method: 'POST' });
+    send({ type: 'habits:update' });
+    await loadData();
+  }
+
+  async function unarchiveHabit(habit) {
+    await fetch(`${base}/api/habits/${habit.id}/unarchive`, { method: 'POST' });
+    send({ type: 'habits:update' });
+    await loadData();
+  }
+
+  async function permanentlyDeleteHabit(habit) {
+    if (!confirm(`Permanently delete ${habit.description}? This cannot be undone.`)) return;
     await fetch(`${base}/api/habits/${habit.id}`, { method: 'DELETE' });
     send({ type: 'habits:update' });
-    await loadHabits();
+    await loadData();
   }
 
   async function afterAddHabit() {
     showAddDialog = false;
-    await loadHabits();
+    await loadData();
   }
 
   onMount(() => {
-    loadHabits();
-    const onSync = () => loadHabits();
+    loadData();
+    const onSync = () => loadData();
     window.addEventListener('sync:habits', onSync);
     window.addEventListener('sync:sessions', onSync);
     return () => {
@@ -72,7 +85,7 @@
   {#if activeTab === 'main'}
     <TimerBanner {habitsStore} />
     <WeekSummary {habitsStore} />
-    <HabitList {habitsStore} onAdd={openAddDialog} onEdit={openEditDialog} onDelete={deleteHabit} />
+    <HabitList {groupsStore} onEdit={openEditDialog} onArchive={archiveHabit} onUnarchive={unarchiveHabit} onPermanentDelete={permanentlyDeleteHabit} />
   {:else}
     <StatsView />
   {/if}

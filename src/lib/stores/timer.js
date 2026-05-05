@@ -1,9 +1,13 @@
 import dayjs from "dayjs";
-import { get, writable } from "svelte/store";
+import { derived, get, writable } from "svelte/store";
 import { base } from "$app/paths";
 import { send } from "./sync.js";
 
-export const habitsStore = writable([]);
+export const groupsStore = writable([]);
+
+export const habitsStore = derived(groupsStore, ($groups) => {
+	return $groups.flatMap((g) => g.habits);
+});
 
 export const weekSummaryStore = writable("");
 

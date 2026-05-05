@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
   import { base } from '$app/paths';
   import { send } from '$lib/stores/sync.js';
 
@@ -10,6 +10,17 @@
   let description = editingHabit?.description || '';
   let habitType = editingHabit?.habit_type || 'timer';
   let minValue = editingHabit?.min_value?.toString() || '';
+  let groupId = editingHabit?.group_id || '';
+  let groups = [];
+
+  onMount(async () => {
+    const res = await fetch(`${base}/api/groups`);
+    groups = await res.json();
+    if (!groupId) {
+      const general = groups.find(g => g.name === 'General');
+      groupId = general?.id ?? (groups[0]?.id || '');
+    }
+  });
 
   async function submit() {
     if (!description.trim()) return;
@@ -18,6 +29,7 @@
       description: description.trim(),
       habitType,
       minValue: minValue ? Number(minValue) : null,
+      groupId: groupId ? Number(groupId) : null,
     };
 
     const url = editingHabit ? `${base}/api/habits/${editingHabit.id}` : `${base}/api/habits`;
@@ -60,6 +72,15 @@
       <input type="number" bind:value={minValue} placeholder="optional" />
     </label>
   {/if}
+
+  <label>
+    Group
+    <select bind:value={groupId}>
+      {#each groups as group}
+        <option value={group.id}>{group.name}</option>
+      {/each}
+    </select>
+  </label>
 
   <div class="actions">
     <button class="cancel-btn" on:click={() => dispatch('close')}>Cancel</button>
