@@ -643,7 +643,7 @@
   }
 
   .cal-cell.has-note {
-    box-shadow: inset 0 0 0 1px rgba(30, 30, 46, 0.5), inset 0 0 0 3px #ffffff;
+    box-shadow: inset 0 0 0 2px #232636, inset 0 0 0 4px #ffffff;
   }
 
   /* Legend */
