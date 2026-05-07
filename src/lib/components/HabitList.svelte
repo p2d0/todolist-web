@@ -10,6 +10,7 @@
   export let onArchive = null;
   export let onUnarchive = null;
   export let onPermanentDelete = null;
+  export let onOpenNote = null;
 
   let groups = [];
   let archivedHabits = [];
@@ -308,7 +309,10 @@
   {#if mounted}
     <div class="habit-list-header">
       {#if !showArchived}
-        <button class="add-group-btn" on:click={() => showNewGroupInput = true}>+ Group</button>
+        <div class="header-left">
+          <button class="add-group-btn" on:click={() => showNewGroupInput = true}>+ Group</button>
+          <button class="note-btn" on:click={() => onOpenNote?.()}>📝 Note</button>
+        </div>
         <div class="header-toggles">
           <button class="hide-toggle" class:active={hideCompleted} on:click={toggleHideCompleted}
             aria-label={hideCompleted ? 'Show all' : 'Hide done'}>
@@ -452,6 +456,12 @@
     gap: 8px;
   }
 
+  .header-left {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
   .header-toggles {
     display: flex;
     gap: 6px;
@@ -470,6 +480,22 @@
   }
 
   .add-group-btn:hover {
+    background: #2a2e3f;
+    color: #cdd6f4;
+  }
+
+  .note-btn {
+    background: none;
+    border: 1px solid #363a4f;
+    border-radius: 8px;
+    color: #6c7086;
+    font-size: 11px;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: background 150ms, color 150ms, border-color 150ms;
+  }
+
+  .note-btn:hover {
     background: #2a2e3f;
     color: #cdd6f4;
   }

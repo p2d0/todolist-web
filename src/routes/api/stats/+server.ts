@@ -5,6 +5,7 @@ import {
 	getMonthlyCompletions,
 	getStreak,
 	getMonthlyDailyData,
+	getNotesForDates,
 } from "$lib/server/db";
 
 export function GET({ url }) {
@@ -58,6 +59,30 @@ export function GET({ url }) {
 		};
 	});
 
+	// Compute daily aggregate completion counts
+	const dailyCompletions = [];
+	const dates = [];
+	for (let day = 1; day <= daysInMonth; day++) {
+		const date = `${month}-${String(day).padStart(2, "0")}`;
+		dates.push(date);
+		let count = 0;
+		for (const habit of habits) {
+			const daily = habitStats.find((h) => h.id === habit.id)?.daily || [];
+			const value = daily[day - 1] || 0;
+			if (habit.habit_type === "boolean") {
+				if (value > 0) count++;
+			} else if (habit.habit_type === "timer") {
+				if (value > 0) count++;
+			} else {
+				if (value >= (habit.min_value || 0)) count++;
+			}
+		}
+		dailyCompletions.push(count);
+	}
+
+	const notes = getNotesForDates(dates);
+	const notesMap = new Map(notes.map((n) => [n.date, n]));
+
 	return json({
 		month,
 		summary: {
@@ -66,5 +91,7 @@ export function GET({ url }) {
 			bestStreak,
 		},
 		habits: habitStats,
+		dailyCompletions,
+		notes: Array.from(notesMap.entries()).map(([date, note]) => ({ date, content: note.content })),
 	});
 }

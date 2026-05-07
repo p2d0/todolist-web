@@ -62,6 +62,9 @@ function handleMessage(msg) {
 		case "sessions:update":
 			window.dispatchEvent(new CustomEvent("sync:sessions"));
 			break;
+		case "notes:update":
+			window.dispatchEvent(new CustomEvent("sync:notes", { detail: msg.data }));
+			break;
 	}
 }
 

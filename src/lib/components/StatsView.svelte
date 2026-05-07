@@ -1,9 +1,14 @@
 <script>
   import { base } from '$app/paths';
   import { onMount } from 'svelte';
+  import { createEventDispatcher } from 'svelte';
+
+  const dispatch = createEventDispatcher();
 
   let allStats = [];
   let loading = true;
+  let tooltip = { show: false, x: 0, y: 0, date: '', count: 0, note: '' };
+  let tooltipEl;
 
   const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const dayLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -110,7 +115,94 @@
 
     return { weeks: allWeeks, monthHeaders };
   }
+
+  // --- Aggregate monthly view helpers ---
+
+  function getAggregateLevel(count) {
+    if (count === 0) return 0;
+    if (count === 1) return 1;
+    if (count <= 3) return 2;
+    if (count <= 6) return 3;
+    if (count <= 10) return 4;
+    if (count <= 15) return 5;
+    return 6;
+  }
+
+  function aggregateColor(level) {
+    switch (level) {
+      case 0: return '#2a2e3f';
+      case 1: return '#f38ba8';
+      case 2: return '#fab387';
+      case 3: return '#f9e2af';
+      case 4: return '#a6e3a1';
+      case 5: return '#2d8a3e';
+      case 6: return '#1e4d2b';
+      default: return '#2a2e3f';
+    }
+  }
+
+  function getCompletionData(month, day) {
+    const stat = allStats.find(s => s.month === month);
+    if (!stat) return 0;
+    return stat.dailyCompletions[day - 1] || 0;
+  }
+
+  function getNoteForCell(month, day) {
+    const stat = allStats.find(s => s.month === month);
+    if (!stat) return null;
+    const date = `${month}-${String(day).padStart(2, '0')}`;
+    const note = stat.notes.find(n => n.date === date);
+    return note || null;
+  }
+
+  function showTooltip(e, month, day) {
+    const count = getCompletionData(month, day);
+    const note = getNoteForCell(month, day);
+    const date = `${month}-${String(day).padStart(2, '0')}`;
+    const rect = e.currentTarget.getBoundingClientRect();
+
+    tooltip = {
+      show: true,
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
+      date,
+      count,
+      note: note ? note.content : ''
+    };
+  }
+
+  function hideTooltip() {
+    tooltip.show = false;
+  }
+
+  function editNoteFromTooltip() {
+    if (tooltip.date) {
+      dispatch('editnote', { date: tooltip.date });
+    }
+    hideTooltip();
+  }
+
+  function onDocumentClick(e) {
+    const isTooltip = tooltipEl && tooltipEl.contains(e.target);
+    const isCell = e.target.closest('.cal-cell');
+    if (!isTooltip && !isCell) {
+      hideTooltip();
+    }
+  }
 </script>
+
+<svelte:window on:click={onDocumentClick} />
+
+{#if tooltip.show}
+  <div class="tooltip" bind:this={tooltipEl} style="left: {tooltip.x + 12}px; top: {tooltip.y + 12}px;">
+    <div class="tooltip-date">{tooltip.date}</div>
+    <div class="tooltip-count">{tooltip.count} habit{tooltip.count === 1 ? '' : 's'} done</div>
+    {#if tooltip.note}
+      <div class="tooltip-note">{tooltip.note}</div>
+    {/if}
+    <button class="tooltip-edit" on:click={editNoteFromTooltip}>Edit note</button>
+  </div>
+{/if}
 
 <div class="stats-view">
   {#if loading}
@@ -126,6 +218,57 @@
     {@const bestStreak = Math.max(...allStats.map(m => m.summary.bestStreak), 0)}
 
     <div class="stats-header">Stats</div>
+
+    <!-- Aggregate Monthly View -->
+    <div class="aggregate-card">
+      <div class="aggregate-header">
+        <span class="aggregate-title">📅 Monthly Overview</span>
+        <span class="aggregate-subtitle">Habits completed per day</span>
+      </div>
+      <div class="calendar-scroll">
+        <div class="month-label-row" style="padding-left: {14 + 2}px">
+          {#each monthHeaders as header, i}
+            {@const endIdx = monthHeaders[i + 1]?.weekIndex ?? weeks.length}
+            {@const numGaps = i > 0 ? 1 : 0}
+            {@const colWidth = (endIdx - header.weekIndex) * (10 + 2) + numGaps * 4}
+            <span class="month-label" style="width: {colWidth}px">{header.label}</span>
+          {/each}
+        </div>
+        <table class="calendar-table">
+          <tbody>
+            {#each [0,1,2,3,4,5,6] as dayIdx}
+              <tr>
+                <td class="day-label-cell">{dayLabels[dayIdx][0]}</td>
+                {#each weeks as week, wkIdx}
+                  {@const cell = week[dayIdx]}
+                  {#if cell}
+                    {@const count = getCompletionData(cell.month, cell.day)}
+                    {@const note = getNoteForCell(cell.month, cell.day)}
+                    {@const level = getAggregateLevel(count)}
+                    <td
+                      class="cal-cell {monthStarts.has(wkIdx) && wkIdx > 0 ? 'month-gap' : ''} {note ? 'has-note' : ''}"
+                      style="background: {aggregateColor(level)}"
+                      on:mouseenter={(e) => showTooltip(e, cell.month, cell.day)}
+                      on:mouseleave={hideTooltip}
+                      on:click|stopPropagation={(e) => showTooltip(e, cell.month, cell.day)}
+                    ></td>
+                  {:else}
+                    <td class="cal-cell empty {monthStarts.has(wkIdx) && wkIdx > 0 ? 'month-gap' : ''}"></td>
+                  {/if}
+                {/each}
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </div>
+      <div class="legend">
+        <span class="legend-label">0</span>
+        {#each [0, 1, 2, 3, 4, 5, 6] as lvl}
+          <div class="legend-box" style="background: {aggregateColor(lvl)}"></div>
+        {/each}
+        <span class="legend-label">16+</span>
+      </div>
+    </div>
 
     <div class="summary-row">
       <div class="summary-card">
@@ -173,7 +316,6 @@
             </div>
           </div>
 
-<!-- Table-based calendar for perfect alignment -->
           <div class="calendar-scroll">
             <div class="month-label-row" style="padding-left: {14 + 2}px">
               {#each monthHeaders as header, i}
@@ -245,6 +387,84 @@
     text-align: center;
     margin-bottom: 12px;
     margin-top: 4px;
+  }
+
+  /* Tooltip */
+  .tooltip {
+    position: fixed;
+    z-index: 300;
+    background: #232636;
+    border: 1px solid #363a4f;
+    border-radius: 8px;
+    padding: 10px 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    pointer-events: auto;
+    max-width: 220px;
+  }
+
+  .tooltip-date {
+    font-size: 11px;
+    font-weight: 600;
+    color: #b4befe;
+    margin-bottom: 4px;
+  }
+
+  .tooltip-count {
+    font-size: 12px;
+    color: #cdd6f4;
+    margin-bottom: 6px;
+  }
+
+  .tooltip-note {
+    font-size: 11px;
+    color: #a6adc8;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    white-space: pre-wrap;
+    max-height: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .tooltip-edit {
+    background: #363a4f;
+    border: 1px solid #454a60;
+    border-radius: 6px;
+    color: #cdd6f4;
+    font-size: 11px;
+    padding: 4px 10px;
+    cursor: pointer;
+  }
+
+  .tooltip-edit:hover {
+    background: #454a60;
+  }
+
+  /* Aggregate card */
+  .aggregate-card {
+    background: #232636;
+    border: 1px solid #363a4f;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 16px;
+  }
+
+  .aggregate-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .aggregate-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #cdd6f4;
+  }
+
+  .aggregate-subtitle {
+    font-size: 10px;
+    color: #6c7086;
   }
 
   .summary-row {
@@ -374,6 +594,7 @@
     height: 10px;
     padding: 0;
     border-radius: 2px;
+    cursor: pointer;
   }
 
   .cal-cell.month-gap {
@@ -383,6 +604,10 @@
   .cal-cell.empty {
     background: #2a2e3f;
     opacity: 0.2;
+  }
+
+  .cal-cell.has-note {
+    box-shadow: inset 0 0 0 1.5px #cdd6f4;
   }
 
   /* Legend */
