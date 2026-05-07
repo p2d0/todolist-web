@@ -3,12 +3,13 @@
 ## Testing
 
 ```bash
-# Run all 12 Playwright tests (auto-starts dev server on 5173)
+# Run all 14 Playwright tests (auto-starts dev server on 5173)
 python3 tests/test_pomotask.py
 
 # Run individual test files
 python3 tests/test_today.py
 python3 tests/test_other_days.py
+python3 tests/test_notes.py
 ```
 
 ### Notes
