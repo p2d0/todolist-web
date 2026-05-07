@@ -8,6 +8,7 @@
   let allStats = [];
   let loading = true;
   let tooltip = { show: false, x: 0, y: 0, date: '', count: 0, note: '' };
+  let tooltipPinned = false;
   let tooltipEl;
 
   const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -155,7 +156,7 @@
     return note || null;
   }
 
-  function showTooltip(e, month, day) {
+  function showTooltip(e, month, day, pin = false) {
     const count = getCompletionData(month, day);
     const note = getNoteForCell(month, day);
     const date = `${month}-${String(day).padStart(2, '0')}`;
@@ -169,24 +170,38 @@
       count,
       note: note ? note.content : ''
     };
+    tooltipPinned = pin;
   }
 
   function hideTooltip() {
+    if (tooltipPinned) return;
     tooltip.show = false;
+  }
+
+  function togglePin(e, month, day) {
+    const date = `${month}-${String(day).padStart(2, '0')}`;
+    if (tooltipPinned && tooltip.date === date) {
+      tooltipPinned = false;
+      tooltip.show = false;
+    } else {
+      showTooltip(e, month, day, true);
+    }
   }
 
   function editNoteFromTooltip() {
     if (tooltip.date) {
       dispatch('editnote', { date: tooltip.date });
     }
-    hideTooltip();
+    tooltipPinned = false;
+    tooltip.show = false;
   }
 
   function onDocumentClick(e) {
     const isTooltip = tooltipEl && tooltipEl.contains(e.target);
     const isCell = e.target.closest('.cal-cell');
     if (!isTooltip && !isCell) {
-      hideTooltip();
+      tooltipPinned = false;
+      tooltip.show = false;
     }
   }
 </script>
@@ -248,9 +263,9 @@
                     <td
                       class="cal-cell {monthStarts.has(wkIdx) && wkIdx > 0 ? 'month-gap' : ''} {note ? 'has-note' : ''}"
                       style="background: {aggregateColor(level)}"
-                      on:mouseenter={(e) => showTooltip(e, cell.month, cell.day)}
-                      on:mouseleave={hideTooltip}
-                      on:click|stopPropagation={(e) => showTooltip(e, cell.month, cell.day)}
+                      on:mouseenter={(e) => { if (!tooltipPinned) showTooltip(e, cell.month, cell.day, false); }}
+                      on:mouseleave={() => { if (!tooltipPinned) hideTooltip(); }}
+                      on:click|stopPropagation={(e) => togglePin(e, cell.month, cell.day)}
                     ></td>
                   {:else}
                     <td class="cal-cell empty {monthStarts.has(wkIdx) && wkIdx > 0 ? 'month-gap' : ''}"></td>
