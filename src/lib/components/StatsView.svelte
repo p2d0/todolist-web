@@ -14,7 +14,8 @@
   const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const dayLabels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
-  onMount(async () => {
+  async function loadStats() {
+    loading = true;
     const now = new Date();
     const months = [];
     for (let i = -2; i <= 2; i++) {
@@ -28,6 +29,17 @@
 
     allStats = results;
     loading = false;
+  }
+
+  onMount(() => {
+    loadStats();
+
+    const onNotesSync = () => loadStats();
+    window.addEventListener('sync:notes', onNotesSync);
+
+    return () => {
+      window.removeEventListener('sync:notes', onNotesSync);
+    };
   });
 
   function getHabitDataMap(allStats, habitId) {
@@ -196,6 +208,13 @@
     tooltip.show = false;
   }
 
+  function openNoteEditor(month, day) {
+    const date = `${month}-${String(day).padStart(2, '0')}`;
+    dispatch('editnote', { date });
+    tooltipPinned = false;
+    tooltip.show = false;
+  }
+
   function onDocumentClick(e) {
     const isTooltip = tooltipEl && tooltipEl.contains(e.target);
     const isCell = e.target.closest('.cal-cell');
@@ -263,9 +282,11 @@
                     <td
                       class="cal-cell {monthStarts.has(wkIdx) && wkIdx > 0 ? 'month-gap' : ''} {note ? 'has-note' : ''}"
                       style="background: {aggregateColor(level)}"
+                      data-date="{cell.month}-{String(cell.day).padStart(2, '0')}"
                       on:mouseenter={(e) => { if (!tooltipPinned) showTooltip(e, cell.month, cell.day, false); }}
                       on:mouseleave={() => { if (!tooltipPinned) hideTooltip(); }}
                       on:click|stopPropagation={(e) => togglePin(e, cell.month, cell.day)}
+                      on:contextmenu|preventDefault={() => openNoteEditor(cell.month, cell.day)}
                     ></td>
                   {:else}
                     <td class="cal-cell empty {monthStarts.has(wkIdx) && wkIdx > 0 ? 'month-gap' : ''}"></td>
@@ -622,7 +643,7 @@
   }
 
   .cal-cell.has-note {
-    box-shadow: inset 0 0 0 1.5px #cdd6f4;
+    box-shadow: inset 0 0 0 1px rgba(30, 30, 46, 0.5), inset 0 0 0 3px #ffffff;
   }
 
   /* Legend */
