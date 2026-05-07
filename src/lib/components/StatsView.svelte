@@ -264,7 +264,7 @@
           {#each monthHeaders as header, i}
             {@const endIdx = monthHeaders[i + 1]?.weekIndex ?? weeks.length}
             {@const numGaps = i > 0 ? 1 : 0}
-            {@const colWidth = (endIdx - header.weekIndex) * (10 + 2) + numGaps * 4}
+            {@const colWidth = (endIdx - header.weekIndex) * (12 + 2) + numGaps * 4}
             <span class="month-label" style="width: {colWidth}px">{header.label}</span>
           {/each}
         </div>
@@ -357,7 +357,7 @@
               {#each monthHeaders as header, i}
                 {@const endIdx = monthHeaders[i + 1]?.weekIndex ?? weeks.length}
                 {@const numGaps = i > 0 ? 1 : 0}
-                {@const colWidth = (endIdx - header.weekIndex) * (10 + 2) + numGaps * 4}
+                {@const colWidth = (endIdx - header.weekIndex) * (12 + 2) + numGaps * 4}
                 <span class="month-label" style="width: {colWidth}px">{header.label}</span>
               {/each}
             </div>
@@ -613,21 +613,21 @@
     width: 14px;
     min-width: 14px;
     max-width: 14px;
-    height: 10px;
+    height: 12px;
     padding: 0;
     font-size: 9px;
     color: #a6adc8;
     text-align: right;
     vertical-align: middle;
-    line-height: 10px;
+    line-height: 12px;
     overflow: hidden;
     white-space: nowrap;
   }
 
   .cal-cell {
-    width: 10px;
-    min-width: 10px;
-    height: 10px;
+    width: 12px;
+    min-width: 12px;
+    height: 12px;
     padding: 0;
     border-radius: 2px;
     cursor: pointer;
@@ -643,7 +643,7 @@
   }
 
   .cal-cell.has-note {
-    box-shadow: inset 0 0 0 2px #232636, inset 0 0 0 4px #ffffff;
+    box-shadow: inset 0 0 0 1px #232636, inset 0 0 0 2px #ffffff;
   }
 
   /* Legend */
@@ -656,5 +656,5 @@
   }
 
   .legend-label { font-size: 10px; color: #6c7086; }
-  .legend-box { width: 10px; height: 10px; border-radius: 2px; }
+  .legend-box { width: 12px; height: 12px; border-radius: 2px; }
 </style>
