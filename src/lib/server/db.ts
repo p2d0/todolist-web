@@ -54,6 +54,12 @@ function initSchema(db) {
     );
 
     CREATE INDEX IF NOT EXISTS idx_sessions_habit_date ON sessions(habit_id, date);
+
+    CREATE TABLE IF NOT EXISTS notes (
+      date TEXT PRIMARY KEY,
+      content TEXT NOT NULL DEFAULT '',
+      updated_at TEXT NOT NULL
+    );
   `);
 }
 
@@ -530,4 +536,32 @@ export function getWeekSummary(habitId) {
 		totalSeconds: r.totalSeconds || 0,
 		value: r.value,
 	}));
+}
+
+// --- Notes ---
+
+export function getNote(date) {
+	const db = getDb();
+	return db.prepare("SELECT * FROM notes WHERE date = ?").get(date);
+}
+
+export function getNotesForDates(dates) {
+	const db = getDb();
+	if (dates.length === 0) return [];
+	const placeholders = dates.map(() => "?").join(",");
+	return db.prepare(`SELECT * FROM notes WHERE date IN (${placeholders})`).all(...dates);
+}
+
+export function setNote(date, content) {
+	const db = getDb();
+	const now = new Date().toISOString().replace("T", " ").substring(0, 19);
+	if (!content || content.trim() === "") {
+		db.prepare("DELETE FROM notes WHERE date = ?").run(date);
+		return null;
+	}
+	const trimmed = content.trim();
+	db.prepare(
+		"INSERT INTO notes (date, content, updated_at) VALUES (?, ?, ?) ON CONFLICT(date) DO UPDATE SET content = excluded.content, updated_at = excluded.updated_at",
+	).run(date, trimmed, now);
+	return { date, content: trimmed, updated_at: now };
 }

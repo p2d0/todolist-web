@@ -11,10 +11,14 @@
   import BottomNav from '$lib/components/BottomNav.svelte';
   import FabButton from '$lib/components/FabButton.svelte';
   import StatsView from '$lib/components/StatsView.svelte';
+  import NoteEditor from '$lib/components/NoteEditor.svelte';
 
   let showAddDialog = false;
   let editingHabit = null;
   let activeTab = 'main';
+  let showNoteEditor = false;
+  let noteDate = '';
+  let noteInitialContent = '';
 
   function getWeekRange() {
     const today = dayjs();
@@ -69,6 +73,24 @@
     await loadData();
   }
 
+  async function openNoteEditor(date) {
+    const targetDate = date || dayjs().format('YYYY-MM-DD');
+    noteDate = targetDate;
+    try {
+      const res = await fetch(`${base}/api/notes?date=${targetDate}`);
+      const data = await res.json();
+      noteInitialContent = data.note?.content || '';
+    } catch (e) {
+      noteInitialContent = '';
+    }
+    showNoteEditor = true;
+  }
+
+  function closeNoteEditor() {
+    showNoteEditor = false;
+    noteInitialContent = '';
+  }
+
   onMount(() => {
     loadData();
     const onSync = () => loadData();
@@ -85,13 +107,17 @@
   {#if activeTab === 'main'}
     <TimerBanner {habitsStore} />
     <WeekSummary {habitsStore} />
-    <HabitList {groupsStore} onEdit={openEditDialog} onArchive={archiveHabit} onUnarchive={unarchiveHabit} onPermanentDelete={permanentlyDeleteHabit} />
+    <HabitList {groupsStore} onEdit={openEditDialog} onArchive={archiveHabit} onUnarchive={unarchiveHabit} onPermanentDelete={permanentlyDeleteHabit} onOpenNote={() => openNoteEditor()} />
   {:else}
-    <StatsView />
+    <StatsView on:editnote={(e) => openNoteEditor(e.detail.date)} />
   {/if}
 
   {#if showAddDialog}
     <AddHabitDialog {editingHabit} on:close={() => showAddDialog = false} on:added={afterAddHabit} />
+  {/if}
+
+  {#if showNoteEditor}
+    <NoteEditor date={noteDate} initialContent={noteInitialContent} on:saved={closeNoteEditor} on:close={closeNoteEditor} />
   {/if}
 </div>
 
