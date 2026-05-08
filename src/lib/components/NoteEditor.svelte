@@ -40,7 +40,7 @@
 
 <svelte:window on:keydown={handleKeydown} />
 
-<div class="overlay" role="dialog" aria-modal="true" tabindex="-1" on:click|self={cancel} on:keydown={(e) => e.key === 'Enter' && cancel()}>
+<div class="overlay" role="dialog" aria-modal="true" tabindex="-1" on:click|self={cancel}>
   <div class="dialog">
     <div class="dialog-header">
       <span class="dialog-title">📝 Note for {date}</span>
