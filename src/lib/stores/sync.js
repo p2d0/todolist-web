@@ -56,6 +56,9 @@ function handleMessage(msg) {
 		case "timer:update":
 			timerStore.set(msg.data);
 			break;
+		case "timer:stop":
+			timerStore.stop();
+			break;
 		case "habits:update":
 			window.dispatchEvent(new CustomEvent("sync:habits"));
 			break;
