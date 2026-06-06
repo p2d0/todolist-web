@@ -585,6 +585,12 @@
     -webkit-overflow-scrolling: touch;
     margin: 0 -12px;
     padding: 0 12px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .calendar-scroll::-webkit-scrollbar {
+    display: none;
   }
 
   .calendar-table {
