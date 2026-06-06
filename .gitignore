@@ -23,6 +23,21 @@ server.key
 # Python
 __pycache__/
 *.pyc
+.pytest_cache/
+
+# Debug/test artifacts
+test.json
+after-hide
+after-hide2
+after-toggle
+after-wait
+check
+check2
+fresh
+page-snap
+ready
+reloaded
+test-results/
 
 # Editor / OS
 .DS_Store
