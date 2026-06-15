@@ -4,12 +4,30 @@ import { timerStore } from "./timer.js";
 
 let ws = null;
 let reconnectTimer = null;
+let pingTimer = null;
 const RECONNECT_DELAY = 3000;
+const PING_INTERVAL = 30000;
 const CLIENT_ID = browser ? Math.random().toString(36).slice(2, 9) : "server";
 
 export function initSync() {
 	if (!browser) return;
 	connect();
+}
+
+function startPing() {
+	clearPing();
+	pingTimer = setInterval(() => {
+		if (ws?.readyState === WebSocket.OPEN) {
+			ws.send(JSON.stringify({ type: "ping", clientId: CLIENT_ID }));
+		}
+	}, PING_INTERVAL);
+}
+
+function clearPing() {
+	if (pingTimer) {
+		clearInterval(pingTimer);
+		pingTimer = null;
+	}
 }
 
 function connect() {
@@ -29,6 +47,7 @@ function connect() {
 			clearTimeout(reconnectTimer);
 			reconnectTimer = null;
 		}
+		startPing();
 	};
 
 	ws.onmessage = (event) => {
@@ -42,12 +61,23 @@ function connect() {
 	};
 
 	ws.onclose = () => {
+		clearPing();
 		reconnectTimer = setTimeout(connect, RECONNECT_DELAY);
 	};
 
 	ws.onerror = () => {
 		if (ws) ws.close();
 	};
+}
+
+export function reconnect() {
+	if (ws) {
+		ws.onclose = null; // Prevent scheduling old reconnect
+		ws.close();
+	}
+	ws = null;
+	clearPing();
+	connect();
 }
 
 function handleMessage(msg) {

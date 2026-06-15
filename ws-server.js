@@ -32,6 +32,7 @@ export function initWebSocket(server, basePath = '/pomotask') {
 }
 
 function handleMessage(msg) {
+  if (msg.type === 'ping') return; // Keepalive, don't relay
   if (msg.type?.startsWith('timer:')) {
     currentTimerState = { ...currentTimerState, ...msg.data };
   }

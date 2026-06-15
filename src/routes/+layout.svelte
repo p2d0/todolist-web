@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { base } from '$app/paths';
-  import { initSync } from '$lib/stores/sync.js';
+  import { initSync, reconnect } from '$lib/stores/sync.js';
   import { initTimerNotification } from '$lib/stores/timer-notification.js';
 
   if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
@@ -16,6 +16,17 @@
   onMount(() => {
     initSync();
     initTimerNotification();
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        reconnect();
+        window.dispatchEvent(new CustomEvent('sync:habits'));
+        window.dispatchEvent(new CustomEvent('sync:sessions'));
+        window.dispatchEvent(new CustomEvent('sync:notes'));
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
   });
 </script>
 

@@ -47,16 +47,13 @@
     const unsub = groupsStore.subscribe(v => { groups = v; });
     const unsubHide = hideCompletedStore.subscribe(v => hideCompleted = v);
 
-    const handleVisibility = () => { if (document.visibilityState === 'visible') refresh(); };
     const handleSync = () => refresh();
     const handleSessionSync = () => checkCompleted();
-    document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('sync:habits', handleSync);
     window.addEventListener('sync:sessions', handleSessionSync);
     return () => {
       unsub();
       unsubHide();
-      document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('sync:habits', handleSync);
       window.removeEventListener('sync:sessions', handleSessionSync);
     };
