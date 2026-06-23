@@ -145,16 +145,7 @@
   async function handleCircleClick(circle) {
     if (wasLongPress) { wasLongPress = false; return; }
     if (habit.habit_type === 'timer') {
-      if (circle.isToday) {
-        // Start/stop timer
-        if (activeTimer && activeTimer.activeHabitId === habit.id && activeTimer.running) {
-          await stopTimer(habit);
-        } else {
-          startTimer(habit);
-        }
-      } else {
-        openTimeEditor(circle);
-      }
+      openTimeEditor(circle);
     } else if (habit.habit_type === 'boolean') {
       toggleBoolean(habit.id, circle.date);
     } else if (habit.habit_type === 'number') {
@@ -257,12 +248,25 @@
   $: rowClass = isActiveRow ? 'habit-row active' : 'habit-row';
 
   $: liveLabel = isActiveRow ? formatDuration(getElapsed()) : '';
+
+  async function toggleTimerFromHeader() {
+    if (activeTimer && activeTimer.activeHabitId === habit.id && activeTimer.running) {
+      await stopTimer(habit);
+    } else {
+      startTimer(habit);
+    }
+  }
+
+  $: playLabel = habit.habit_type === 'timer' && isActiveRow ? '⏹' : '▶';
 </script>
 
 <div class={rowClass}>
   <div class="habit-header">
     <span class="habit-desc">{habit.description}</span>
     <button class="edit-btn" on:click={() => onEdit?.(habit)} aria-label="Edit habit">✏️</button>
+    {#if habit.habit_type === 'timer'}
+      <button class="edit-btn" on:click={toggleTimerFromHeader} aria-label="Start/stop timer">{playLabel}</button>
+    {/if}
     <button class="edit-btn delete-btn" on:click={() => onArchive?.(habit)} aria-label="Delete habit">🗑</button>
   </div>
   <div class="circles-row">
