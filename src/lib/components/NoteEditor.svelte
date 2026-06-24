@@ -79,6 +79,7 @@
     justify-content: center;
     z-index: 200;
     padding: 16px;
+    pointer-events: auto;
   }
 
   .dialog {
@@ -91,6 +92,7 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+    pointer-events: auto;
   }
 
   .dialog-header {

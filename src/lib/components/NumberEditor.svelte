@@ -77,6 +77,7 @@
     align-items: center;
     justify-content: center;
     z-index: 100;
+    pointer-events: auto;
   }
 
   @media (max-width: 768px) {
@@ -92,6 +93,7 @@
     padding: 20px;
     min-width: 280px;
     border: 1px solid #363a4f;
+    pointer-events: auto;
   }
 
   .title {

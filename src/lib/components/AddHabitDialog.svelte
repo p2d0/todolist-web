@@ -100,6 +100,7 @@
     inset: 0;
     background: rgba(0, 0, 0, 0.6);
     z-index: 200;
+    pointer-events: auto;
   }
 
   .dialog {
@@ -116,6 +117,7 @@
     padding: 20px;
     padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
     z-index: 201;
+    pointer-events: auto;
   }
 
   h2 {
