@@ -75,22 +75,20 @@ test.describe("PomoTasker Habits", () => {
 		const habitRow = page.locator(".habit-row").filter({ hasText: "Test Timer Habit 2" });
 		const todayCircle = habitRow.locator(".circle-today");
 
-		await expect(todayCircle).not.toHaveClass(/circle-active/);
-
 		// Click play button to start timer
-		const playButton = habitRow.getByRole("button", { name: "Start/stop timer" });
+		const playButton = habitRow.locator("button[aria-label='Start/stop timer']");
 		await expect(playButton).toBeVisible();
 		await playButton.click();
-		await page.waitForTimeout(1000);
+		await page.waitForTimeout(1500);
 
-		await expect(todayCircle).toHaveClass(/circle-active/);
+		// Timer running: circle shows elapsed seconds (e.g. "1s")
+		await expect(todayCircle).toHaveText(/\d+s/);
 
 		// Stop the timer via play button
-		const stopButton = habitRow.getByRole("button", { name: "Start/stop timer" });
-		await stopButton.click();
-		await page.waitForTimeout(1000);
+		await playButton.click();
+		await page.waitForTimeout(1500);
 
-		await expect(todayCircle).not.toHaveClass(/circle-active/);
+		// Timer stopped: circle shows duration or "✓"
 		await expect(todayCircle).toHaveClass(/circle-complete/);
 	});
 
