@@ -12,11 +12,19 @@
 
   onMount(() => {
     window._dialogCount = (window._dialogCount || 0) + 1;
-    document.body.classList.add('dialog-open');
+    document.querySelectorAll('[draggable="true"]').forEach(el => {
+      el.dataset.wasDraggable = el.draggable;
+      el.draggable = false;
+    });
   });
   onDestroy(() => {
     window._dialogCount--;
-    if (!window._dialogCount) document.body.classList.remove('dialog-open');
+    if (!window._dialogCount) {
+      document.querySelectorAll('[data-was-draggable="true"]').forEach(el => {
+        el.draggable = true;
+        delete el.dataset.wasDraggable;
+      });
+    }
   });
 
   async function save() {
