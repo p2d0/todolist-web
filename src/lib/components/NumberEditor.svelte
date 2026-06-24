@@ -55,7 +55,7 @@
   }
 </script>
 
-<div class="overlay" on:click={onClosed} on:keydown={(e) => { if (e.key === 'Escape') onClosed(); }}>
+<div class="overlay" on:click={onClosed} on:keydown={(e) => { if (e.key === 'Escape') onClosed(); if (e.key === 'Enter') { e.preventDefault(); save(); } }}>
   <div class="dialog" on:click|stopPropagation>
     <div class="title">{description} — {date}</div>
     {#if hasData}
