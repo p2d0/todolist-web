@@ -263,10 +263,10 @@
 <div class={rowClass}>
   <div class="habit-header">
     <span class="habit-desc">{habit.description}</span>
-    <button class="edit-btn" on:click={() => onEdit?.(habit)} aria-label="Edit habit">✏️</button>
     {#if habit.habit_type === 'timer'}
       <button class="edit-btn" on:click={toggleTimerFromHeader} aria-label="Start/stop timer">{playLabel}</button>
     {/if}
+    <button class="edit-btn" on:click={() => onEdit?.(habit)} aria-label="Edit habit">✏️</button>
     <button class="edit-btn delete-btn" on:click={() => onArchive?.(habit)} aria-label="Delete habit">🗑</button>
   </div>
   <div class="circles-row">
