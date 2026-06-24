@@ -1,4 +1,5 @@
 <script>
+  import { onMount, onDestroy } from 'svelte';
   import { base } from '$app/paths';
   import { send } from '$lib/stores/sync.js';
 
@@ -12,6 +13,15 @@
   let minutes = Math.floor(durationSeconds / 60);
   let seconds = durationSeconds % 60;
   let hasData = durationSeconds > 0;
+
+  onMount(() => {
+    window._dialogCount = (window._dialogCount || 0) + 1;
+    document.body.classList.add('dialog-open');
+  });
+  onDestroy(() => {
+    window._dialogCount--;
+    if (!window._dialogCount) document.body.classList.remove('dialog-open');
+  });
 
   async function save() {
     const total = minutes * 60 + seconds;
@@ -47,7 +57,7 @@
 </script>
 
 <div class="overlay" on:click={onClosed} on:keydown={(e) => { if (e.key === 'Escape') onClosed(); }}>
-  <div class="dialog" on:click|stopPropagation on:dragstart|stopPropagation>
+  <div class="dialog" on:click|stopPropagation>
     <div class="title">{description} — {date}</div>
     {#if hasData}
       <div class="current">Current: {Math.floor(durationSeconds / 60)}m {durationSeconds % 60}s</div>

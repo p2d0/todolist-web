@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { createEventDispatcher, onMount, onDestroy } from 'svelte';
   import { base } from '$app/paths';
   import { send } from '$lib/stores/sync.js';
 
@@ -14,12 +14,18 @@
   let groups = [];
 
   onMount(async () => {
+    window._dialogCount = (window._dialogCount || 0) + 1;
+    document.body.classList.add('dialog-open');
     const res = await fetch(`${base}/api/groups`);
     groups = await res.json();
     if (!groupId) {
       const general = groups.find(g => g.name === 'General');
       groupId = general?.id ?? (groups[0]?.id || '');
     }
+  });
+  onDestroy(() => {
+    window._dialogCount--;
+    if (!window._dialogCount) document.body.classList.remove('dialog-open');
   });
 
   async function submit() {

@@ -1,7 +1,7 @@
 <script>
   import { base } from '$app/paths';
   import { send } from '$lib/stores/sync.js';
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onMount, onDestroy } from 'svelte';
 
   export let date = '';
   export let initialContent = '';
@@ -9,6 +9,15 @@
   const dispatch = createEventDispatcher();
   let content = initialContent;
   let saving = false;
+
+  onMount(() => {
+    window._dialogCount = (window._dialogCount || 0) + 1;
+    document.body.classList.add('dialog-open');
+  });
+  onDestroy(() => {
+    window._dialogCount--;
+    if (!window._dialogCount) document.body.classList.remove('dialog-open');
+  });
 
   async function save() {
     saving = true;
