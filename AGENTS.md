@@ -2,20 +2,23 @@
 
 ## Testing
 
+### Prerequisites (once)
 ```bash
-# Run all 14 Playwright tests (auto-starts dev server on 5173)
-python3 tests/test_pomotask.py
+# Symlink @playwright/test to system nix store (avoids version conflicts)
+ln -sf /nix/store/1i3ahl6fk8llj3f0qnpzmi6rvks5fxdi-playwright-test-1.59.1/lib/node_modules/@playwright/test node_modules/@playwright/test
+```
 
-# Run individual test files
-python3 tests/test_today.py
-python3 tests/test_other_days.py
-python3 tests/test_notes.py
+### Run tests
+```bash
+# Terminal 1: start dev server
+POMO_BASE='' npm run dev
+
+# Terminal 2: run Playwright tests
+APP_URL=http://localhost:5173/pomotask /run/current-system/sw/bin/playwright test tests/pomotask.spec.js --project=firefox
 ```
 
 ### Notes
-- Uses `playwright-cli` + Firefox, not `@playwright/test` (no system browser deps)
-- Dev server auto-starts/stops (Vite on port 5173)
-- Test habits auto-clean before/after each run
-- Snapshot YAMLs land in `.playwright-cli/`
+- Uses system `playwright` (nix store), not `playwright-cli` or npm `@playwright/test`
+- Dev server runs on `http://localhost:5173/pomotask` (SvelteKit base path)
 - `find`/`grep` banned. Use `fd`/`rg` only.
 
