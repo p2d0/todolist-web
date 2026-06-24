@@ -38,7 +38,7 @@
 </script>
 
 <div class="overlay" on:click={onClosed} on:keydown={(e) => { if (e.key === 'Escape') onClosed(); }}>
-  <div class="dialog" on:click|stopPropagation>
+  <div class="dialog" on:click|stopPropagation on:dragstart|stopPropagation>
     <div class="title">{description} — {date}</div>
     {#if hasData}
       <div class="current">Current: {value}</div>
