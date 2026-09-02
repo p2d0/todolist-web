@@ -10,7 +10,7 @@
   let goals = [];
   let showArchived = false;
   let archivedGoals = [];
-  let pushEnabled = null; // null = unknown, true/false = known
+  let pushEnabled = true; // optimistic: keep the banner hidden until a check proves otherwise
   let enabling = false;
 
   const today = () => dayjs().format('YYYY-MM-DD');
@@ -74,18 +74,21 @@
       pushEnabled = false;
       return;
     }
-    if (Notification.permission === 'granted' && 'serviceWorker' in navigator && 'PushManager' in window) {
-      try {
-        const reg = await navigator.serviceWorker.ready;
-        const sub = await reg.pushManager.getSubscription();
-        pushEnabled = !!sub;
-        return;
-      } catch (e) {
-        pushEnabled = false;
-        return;
-      }
+    if (Notification.permission !== 'granted') {
+      // User hasn't decided yet — only they can grant it (banner button)
+      pushEnabled = null;
+      return;
     }
-    pushEnabled = false;
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      pushEnabled = false;
+      return;
+    }
+    try {
+      // Granted: (re)subscribe silently, no banner needed
+      pushEnabled = await ensureGoalPush();
+    } catch (e) {
+      pushEnabled = false;
+    }
   }
 
   async function enablePush() {
@@ -130,7 +133,7 @@
         <button class="push-btn" on:click={enablePush} disabled={enabling}>
           {enabling ? '…' : '🔔 Enable'}
         </button>
-      {:else if pushEnabled === false}
+      {:else}
         <span>🔕 Daily reminders off</span>
         <button class="push-btn" on:click={enablePush} disabled={enabling}>
           {enabling ? '…' : 'Enable'}
