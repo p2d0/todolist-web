@@ -84,6 +84,12 @@ function initSchema(db) {
       sent_on TEXT NOT NULL,
       PRIMARY KEY (goal_id, sent_on)
     );
+
+    CREATE TABLE IF NOT EXISTS digest_reminders (
+      subscription_id INTEGER NOT NULL,
+      sent_on TEXT NOT NULL,
+      PRIMARY KEY (subscription_id, sent_on)
+    );
   `);
 }
 

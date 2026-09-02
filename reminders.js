@@ -47,6 +47,11 @@ function getDb() {
         sent_on TEXT NOT NULL,
         PRIMARY KEY (goal_id, sent_on)
       );
+      CREATE TABLE IF NOT EXISTS digest_reminders (
+        subscription_id INTEGER NOT NULL,
+        sent_on TEXT NOT NULL,
+        PRIMARY KEY (subscription_id, sent_on)
+      );
     `);
 	}
 	return db;
@@ -64,8 +69,9 @@ function getVapidKeys() {
 }
 
 /**
- * Pure scheduling logic: which (subscription, goal) pairs should be nudged
- * right now. Exported for testing.
+ * Pure scheduling logic: which (subscription, goal) pairs should get the
+ * individual overdue action-notification right now. Exported for testing.
+ * Strictly overdue (due_date < today); due-today lives in the digest.
  */
 export function computeReminderJobs(goals, subscriptions, nowMs) {
 	const jobs = [];
@@ -76,7 +82,7 @@ export function computeReminderJobs(goals, subscriptions, nowMs) {
 		if (localHour !== REMIND_HOUR) continue;
 		const localDate = local.toISOString().slice(0, 10);
 		for (const goal of goals) {
-			if (goal.status === "active" && goal.due_date <= localDate) {
+			if (goal.status === "active" && goal.due_date < localDate) {
 				jobs.push({ sub, goal, localDate });
 			}
 		}
@@ -84,43 +90,103 @@ export function computeReminderJobs(goals, subscriptions, nowMs) {
 	return jobs;
 }
 
+export function daysUntil(localDate, dueDate) {
+	return Math.round((Date.parse(dueDate) - Date.parse(localDate)) / 86400000);
+}
+
+export function daysText(days) {
+	if (days > 0) return days === 1 ? "1 day left" : `${days} days left`;
+	if (days === 0) return "Due today";
+	const n = -days;
+	return n === 1 ? "1 day overdue" : `${n} days overdue`;
+}
+
+function localDateFor(sub, nowMs) {
+	const offset = sub.tz_offset_minutes || 0;
+	return new Date(nowMs + offset * 60000).toISOString().slice(0, 10);
+}
+
+/**
+ * Pure scheduling logic: daily 09:00 digest — every active goal, one line
+ * each, for every subscription. One notification per subscription per day.
+ */
+export function computeDigestJobs(goals, subscriptions, nowMs) {
+	const jobs = [];
+	for (const sub of subscriptions) {
+		const offset = sub.tz_offset_minutes || 0;
+		const local = new Date(nowMs + offset * 60000);
+		if (local.getUTCHours() !== REMIND_HOUR) continue;
+		const localDate = local.toISOString().slice(0, 10);
+		const lines = goals
+			.filter((g) => g.status === "active")
+			.sort((a, b) => a.due_date.localeCompare(b.due_date))
+			.map((g) => `${g.title} — ${daysText(daysUntil(localDate, g.due_date))}`);
+		if (lines.length) jobs.push({ sub, localDate, lines });
+	}
+	return jobs;
+}
+
+function sendPush(subscription, payload) {
+	const { publicKey, privateKey } = getVapidKeys();
+	try {
+		webpush.sendNotification(subscription, payload, {
+			vapidDetails: {
+				subject: VAPID_SUBJECT,
+				publicKey,
+				privateKey,
+			},
+		});
+		return true;
+	} catch (e) {
+		console.error("Push send failed:", e.message);
+		return false;
+	}
+}
+
 export function runGoalReminderTick(nowMs = Date.now()) {
 	const d = getDb();
 	const goals = d.prepare("SELECT * FROM goals WHERE status = 'active'").all();
 	const subs = d.prepare("SELECT * FROM push_subscriptions").all();
-	const jobs = computeReminderJobs(goals, subs, nowMs);
 
 	const sent = [];
-	for (const job of jobs) {
+
+	// 1. Daily digest: all active goals, one per line
+	for (const job of computeDigestJobs(goals, subs, nowMs)) {
+		const already = d
+			.prepare("SELECT 1 FROM digest_reminders WHERE subscription_id = ? AND sent_on = ?")
+			.get(job.sub.id, job.localDate);
+		if (already) continue;
+		const payload = JSON.stringify({
+			title: `Goals — ${job.lines.length} active`,
+			body: job.lines.join("\n"),
+			digest: true,
+		});
+		const subObj = { endpoint: job.sub.endpoint, keys: JSON.parse(job.sub.keys_json) };
+		if (sendPush(subObj, payload)) {
+			d.prepare(
+				"INSERT OR IGNORE INTO digest_reminders (subscription_id, sent_on) VALUES (?, ?)",
+			).run(job.sub.id, job.localDate);
+			sent.push(job);
+		}
+	}
+
+	// 2. Individual action notifications for overdue goals
+	for (const job of computeReminderJobs(goals, subs, nowMs)) {
 		const already = d
 			.prepare("SELECT 1 FROM goal_reminders WHERE goal_id = ? AND sent_on = ?")
 			.get(job.goal.id, job.localDate);
 		if (already) continue;
-
-		const { publicKey, privateKey } = getVapidKeys();
 		const payload = JSON.stringify({
 			title: job.goal.title,
 			body: `Overdue since ${job.goal.due_date} — act on it today`,
 			goalId: job.goal.id,
 		});
-		const subscription = {
-			endpoint: job.sub.endpoint,
-			keys: JSON.parse(job.sub.keys_json),
-		};
-		try {
-			webpush.sendNotification(subscription, payload, {
-				vapidDetails: {
-					subject: VAPID_SUBJECT,
-					publicKey,
-					privateKey,
-				},
-			});
+		const subObj = { endpoint: job.sub.endpoint, keys: JSON.parse(job.sub.keys_json) };
+		if (sendPush(subObj, payload)) {
 			d.prepare(
 				"INSERT OR IGNORE INTO goal_reminders (goal_id, sent_on) VALUES (?, ?)",
 			).run(job.goal.id, job.localDate);
 			sent.push(job);
-		} catch (e) {
-			console.error("Push send failed:", e.message);
 		}
 	}
 	return sent;

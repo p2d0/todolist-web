@@ -24,6 +24,18 @@ self.addEventListener('push', (e) => {
   try {
     data = e.data ? e.data.json() : {};
   } catch (err) {}
+  if (data.digest) {
+    e.waitUntil(
+      self.registration.showNotification(data.title || 'Goals', {
+        body: data.body || '',
+        icon: `${BASE}/icons/icon-192.png`,
+        tag: 'goals-digest',
+        data: { digest: true },
+        vibrate: [100, 50, 100],
+      }),
+    );
+    return;
+  }
   e.waitUntil(
     self.registration.showNotification(data.title || 'PomoTasker', {
       body: data.body || '',
