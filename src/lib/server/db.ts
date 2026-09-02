@@ -60,6 +60,30 @@ function initSchema(db) {
       content TEXT NOT NULL DEFAULT '',
       updated_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS goals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      description TEXT NOT NULL DEFAULT '',
+      due_date TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'active',
+      completed_at TEXT,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS push_subscriptions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      endpoint TEXT NOT NULL UNIQUE,
+      keys_json TEXT NOT NULL,
+      tz_offset_minutes INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS goal_reminders (
+      goal_id INTEGER NOT NULL,
+      sent_on TEXT NOT NULL,
+      PRIMARY KEY (goal_id, sent_on)
+    );
   `);
 }
 
@@ -564,4 +588,94 @@ export function setNote(date, content) {
 		"INSERT INTO notes (date, content, updated_at) VALUES (?, ?, ?) ON CONFLICT(date) DO UPDATE SET content = excluded.content, updated_at = excluded.updated_at",
 	).run(date, trimmed, now);
 	return { date, content: trimmed, updated_at: now };
+}
+
+// --- Goals ---
+
+function now() {
+	return new Date().toISOString().replace("T", " ").substring(0, 19);
+}
+
+export function getGoals() {
+	const db = getDb();
+	return db.prepare("SELECT * FROM goals ORDER BY id DESC").all();
+}
+
+export function getGoal(id) {
+	const db = getDb();
+	return db.prepare("SELECT * FROM goals WHERE id = ?").get(id);
+}
+
+export function addGoal(title, description, dueDate) {
+	const db = getDb();
+	const result = db
+		.prepare(
+			"INSERT INTO goals (title, description, due_date, status, created_at) VALUES (?, ?, ?, 'active', ?)",
+		)
+		.run(title, description ?? "", dueDate, now());
+	return result.lastInsertRowid;
+}
+
+export function updateGoal(id, title, description, dueDate) {
+	const db = getDb();
+	db.prepare("UPDATE goals SET title = ?, description = ?, due_date = ? WHERE id = ?").run(
+		title,
+		description ?? "",
+		dueDate,
+		id,
+	);
+}
+
+export function setGoalStatus(id, status) {
+	const db = getDb();
+	db.prepare(
+		"UPDATE goals SET status = ?, completed_at = CASE WHEN ? = 'completed' THEN ? ELSE NULL END WHERE id = ?",
+	).run(status, status, now(), id);
+}
+
+export function deleteGoal(id) {
+	const db = getDb();
+	db.prepare("DELETE FROM goals WHERE id = ?").run(id);
+}
+
+export function getActiveGoals() {
+	const db = getDb();
+	return db.prepare("SELECT * FROM goals WHERE status = 'active'").all();
+}
+
+// --- Push subscriptions ---
+
+export function savePushSubscription(endpoint, keysJson, tzOffsetMinutes) {
+	const db = getDb();
+	db.prepare(
+		"INSERT INTO push_subscriptions (endpoint, keys_json, tz_offset_minutes, created_at) VALUES (?, ?, ?, ?) ON CONFLICT(endpoint) DO UPDATE SET keys_json = excluded.keys_json, tz_offset_minutes = excluded.tz_offset_minutes",
+	).run(endpoint, keysJson, tzOffsetMinutes ?? 0, now());
+}
+
+export function getPushSubscriptions() {
+	const db = getDb();
+	return db.prepare("SELECT * FROM push_subscriptions").all();
+}
+
+export function deletePushSubscription(endpoint) {
+	const db = getDb();
+	db.prepare("DELETE FROM push_subscriptions WHERE endpoint = ?").run(endpoint);
+}
+
+// --- Goal reminder dedup ---
+
+export function hasGoalReminder(goalId, sentOn) {
+	const db = getDb();
+	const row = db
+		.prepare("SELECT 1 FROM goal_reminders WHERE goal_id = ? AND sent_on = ?")
+		.get(goalId, sentOn);
+	return !!row;
+}
+
+export function addGoalReminder(goalId, sentOn) {
+	const db = getDb();
+	db.prepare("INSERT OR IGNORE INTO goal_reminders (goal_id, sent_on) VALUES (?, ?)").run(
+		goalId,
+		sentOn,
+	);
 }

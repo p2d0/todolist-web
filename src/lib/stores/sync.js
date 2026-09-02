@@ -98,6 +98,9 @@ function handleMessage(msg) {
 		case "notes:update":
 			window.dispatchEvent(new CustomEvent("sync:notes", { detail: msg.data }));
 			break;
+		case "goals:update":
+			window.dispatchEvent(new CustomEvent("sync:goals"));
+			break;
 	}
 }
 

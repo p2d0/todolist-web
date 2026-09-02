@@ -42,7 +42,7 @@
             pname = "pomotasker";
             version = "0.1.0";
             src = ./.;
-            npmDepsHash = "sha256-YYa5yK92J05Tnzduh6eI55EkBpvMXObfzLqD1q5DvFo=";
+            npmDepsHash = "sha256-79wtNWSR4noPjlXhmssq52f8lwhRJXojzi5w4XjBM5s=";
             nodejs = pkgs.nodejs_22;
             nativeBuildInputs = [ pkgs.python3 pkgs.node-gyp pkgs.pkg-config ];
             buildInputs = [ pkgs.sqlite ];
@@ -52,7 +52,7 @@
             installPhase = ''
               mkdir -p $out/lib/node_modules/pomotasker-web
               cp -r package.json build node_modules $out/lib/node_modules/pomotasker-web/
-              cp server.js ws-server.js $out/lib/node_modules/pomotasker-web/
+              cp server.js ws-server.js reminders.js $out/lib/node_modules/pomotasker-web/
             '';
           };
       in rec {

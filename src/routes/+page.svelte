@@ -8,9 +8,11 @@
   import HabitList from '$lib/components/HabitList.svelte';
   import WeekSummary from '$lib/components/WeekSummary.svelte';
   import AddHabitDialog from '$lib/components/AddHabitDialog.svelte';
+  import AddGoalDialog from '$lib/components/AddGoalDialog.svelte';
   import BottomNav from '$lib/components/BottomNav.svelte';
   import FabButton from '$lib/components/FabButton.svelte';
   import StatsView from '$lib/components/StatsView.svelte';
+  import GoalsView from '$lib/components/GoalsView.svelte';
   import NoteEditor from '$lib/components/NoteEditor.svelte';
 
   let showAddDialog = false;
@@ -19,6 +21,9 @@
   let showNoteEditor = false;
   let noteDate = '';
   let noteInitialContent = '';
+  let showGoalDialog = false;
+  let editingGoal = null;
+  let goalsBadge = 0;
 
   function getWeekRange() {
     const today = dayjs();
@@ -46,6 +51,20 @@
   function openEditDialog(habit) {
     editingHabit = habit;
     showAddDialog = true;
+  }
+
+  function openAddGoalDialog() {
+    editingGoal = null;
+    showGoalDialog = true;
+  }
+
+  function openEditGoalDialog(goal) {
+    editingGoal = goal;
+    showGoalDialog = true;
+  }
+
+  async function afterAddGoal() {
+    showGoalDialog = false;
   }
 
   async function archiveHabit(habit) {
@@ -96,11 +115,27 @@
     const onSync = () => loadData();
     window.addEventListener('sync:habits', onSync);
     window.addEventListener('sync:sessions', onSync);
+
+    // Notification tap → open the goal editor for that goal
+    navigator.serviceWorker?.addEventListener('message', async (e) => {
+      if (e.data?.type === 'goals:open') {
+        activeTab = 'goals';
+        if (e.data.goalId) {
+          const res = await fetch(`${base}/api/goals/${e.data.goalId}`);
+          if (res.ok) openEditGoalDialog(await res.json());
+        }
+      }
+    });
+
     return () => {
       window.removeEventListener('sync:habits', onSync);
       window.removeEventListener('sync:sessions', onSync);
     };
   });
+
+  function onGoalsOverdue(e) {
+    goalsBadge = e.detail.count;
+  }
 </script>
 
 <div class="app-container">
@@ -108,6 +143,8 @@
     <TimerBanner {habitsStore} />
     <WeekSummary {habitsStore} />
     <HabitList {groupsStore} onEdit={openEditDialog} onArchive={archiveHabit} onUnarchive={unarchiveHabit} onPermanentDelete={permanentlyDeleteHabit} onOpenNote={() => openNoteEditor()} />
+  {:else if activeTab === 'goals'}
+    <GoalsView on:overdue={onGoalsOverdue} on:edit={(e) => openEditGoalDialog(e.detail.goal)} />
   {:else}
     <StatsView on:editnote={(e) => openNoteEditor(e.detail.date)} />
   {/if}
@@ -116,14 +153,18 @@
     <AddHabitDialog {editingHabit} on:close={() => showAddDialog = false} on:added={afterAddHabit} />
   {/if}
 
+  {#if showGoalDialog}
+    <AddGoalDialog {editingGoal} on:close={() => showGoalDialog = false} on:added={afterAddGoal} />
+  {/if}
+
   {#if showNoteEditor}
     <NoteEditor date={noteDate} initialContent={noteInitialContent} on:saved={closeNoteEditor} on:close={closeNoteEditor} />
   {/if}
 </div>
 
-<BottomNav bind:activeTab showFab={activeTab === 'main'}>
+<BottomNav bind:activeTab showFab={activeTab === 'main' || activeTab === 'goals'} {goalsBadge}>
   <svelte:fragment slot="fab">
-    <FabButton onClick={openAddDialog} />
+    <FabButton onClick={activeTab === 'goals' ? openAddGoalDialog : openAddDialog} />
   </svelte:fragment>
 </BottomNav>
 

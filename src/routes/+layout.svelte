@@ -23,6 +23,7 @@
         window.dispatchEvent(new CustomEvent('sync:habits'));
         window.dispatchEvent(new CustomEvent('sync:sessions'));
         window.dispatchEvent(new CustomEvent('sync:notes'));
+        window.dispatchEvent(new CustomEvent('sync:goals'));
       }
     };
     document.addEventListener('visibilitychange', handleVisibility);

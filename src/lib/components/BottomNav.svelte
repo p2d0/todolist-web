@@ -1,6 +1,7 @@
 <script>
   export let activeTab = 'main';
   export let showFab = true;
+  export let goalsBadge = 0;
 
   function setTab(tab) {
     activeTab = tab;
@@ -19,6 +20,23 @@
       <path d="M3 18h18"></path>
     </svg>
     <span class="nav-label">Main</span>
+  </button>
+
+  <button
+    class="nav-item"
+    class:active={activeTab === 'goals'}
+    on:click={() => setTab('goals')}
+  >
+    <span class="nav-icon-wrap">
+      <svg class="nav-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 11l3 3L22 4"></path>
+        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+      </svg>
+      {#if goalsBadge > 0}
+        <span class="nav-badge">{goalsBadge}</span>
+      {/if}
+    </span>
+    <span class="nav-label">Goals</span>
   </button>
 
   <div class="fab-slot">
@@ -90,6 +108,29 @@
   .nav-label {
     font-size: 11px;
     font-weight: 500;
+  }
+
+  .nav-icon-wrap {
+    position: relative;
+    display: flex;
+  }
+
+  .nav-badge {
+    position: absolute;
+    top: -4px;
+    right: -8px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: #f38ba8;
+    color: #1e1e2e;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
   }
 
   .fab-slot {
