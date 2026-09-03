@@ -167,7 +167,13 @@
 
   .row2 label {
     flex: 1;
+    min-width: 0; /* allow shrinking below the number input's intrinsic width */
     margin-bottom: 0;
+  }
+
+  .row2 input {
+    width: 100%;
+    min-width: 0;
   }
 
   input:focus, textarea:focus {
