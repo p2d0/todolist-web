@@ -3,20 +3,13 @@
 //
 // Standalone module (like ws-server.js): runs outside the SvelteKit bundle,
 // opens its own sqlite connection. Keeps its own minimal queries instead of
-// importing $lib/server/db.ts (that's TS, compiled into the build). Schema
-// must stay in sync with db.ts by hand.
+// importing $lib/server/db.ts (that's TS, compiled into the build). The flake
+// ships this file WITHOUT src/, so NO imports from src/ here. Schema and
+// goal math must stay in sync with db.ts / src/lib/goal-math.js by hand.
 import Database from "better-sqlite3";
 import webpush from "web-push";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import path from "path";
-import {
-	daysUntil,
-	daysText,
-	numberedDigestLine,
-	numberedOverdueBody,
-} from "./src/lib/goal-math.js";
-
-export { daysUntil, daysText };
 
 const dbPath = path.join(process.cwd(), "data", "pomotasker.db");
 const vapidPath = path.join(process.cwd(), "data", "vapid.json");
@@ -114,6 +107,44 @@ export function computeReminderJobs(goals, subscriptions, nowMs) {
 		}
 	}
 	return jobs;
+}
+
+export function daysUntil(localDate, dueDate) {
+	return Math.round((Date.parse(dueDate) - Date.parse(localDate)) / 86400000);
+}
+
+export function daysText(days) {
+	if (days > 0) return days === 1 ? "1 day left" : `${days} days left`;
+	if (days === 0) return "Due today";
+	const n = -days;
+	return n === 1 ? "1 day overdue" : `${n} days overdue`;
+}
+
+// --- Numbered-goal math (mirror of src/lib/goal-math.js — keep in sync) ---
+
+export function perDay(current, target, dueDate, today) {
+	const remaining = Math.abs(target - current);
+	if (remaining === 0) return 0;
+	const runway = Math.max(1, daysUntil(today, dueDate) + 1);
+	return Math.ceil(remaining / runway);
+}
+
+function arrowFor(goal) {
+	if (goal.target_value > goal.start_value) return "↑";
+	if (goal.target_value < goal.start_value) return "↓";
+	return "•";
+}
+
+export function numberedDigestLine(goal, today) {
+	const per = perDay(goal.current_value, goal.target_value, goal.due_date, today);
+	return `${goal.title} — ${daysText(daysUntil(today, goal.due_date))} · ${goal.current_value} → ${goal.target_value} ${arrowFor(goal)} · ${per}/day`;
+}
+
+export function numberedOverdueBody(goal) {
+	const remaining = Math.abs(goal.target_value - goal.current_value);
+	if (remaining === 0)
+		return `Overdue since ${goal.due_date} — at target, mark it complete`;
+	return `Overdue since ${goal.due_date} — ${remaining} left, do ${remaining} today`;
 }
 
 function localDateFor(sub, nowMs) {

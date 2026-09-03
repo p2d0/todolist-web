@@ -5,13 +5,11 @@ import {
 	computeDigestJobs,
 	daysUntil,
 	daysText,
-} from "../reminders.js";
-import {
 	perDay,
-	progress,
 	numberedDigestLine,
 	numberedOverdueBody,
-} from "../src/lib/goal-math.js";
+} from "../reminders.js";
+import * as appMath from "../src/lib/goal-math.js";
 
 const goals = [
 	{ id: 1, title: "Overdue", due_date: "2026-08-20", status: "active" },
@@ -74,11 +72,11 @@ assert.equal(perDay(0, 10, "2026-08-30", "2026-09-02"), 10); // overdue → clam
 assert.equal(perDay(5, 5, "2026-09-05", "2026-09-02"), 0); // at target
 
 // progress: either direction, clamped, start === target → 1
-assert.equal(progress(5, 0, 10), 0.5);
-assert.equal(progress(5, 10, 0), 0.5);
-assert.equal(progress(12, 0, 10), 1);
-assert.equal(progress(-3, 0, -5), 0.6);
-assert.equal(progress(3, 3, 3), 1);
+assert.equal(appMath.progress(5, 0, 10), 0.5);
+assert.equal(appMath.progress(5, 10, 0), 0.5);
+assert.equal(appMath.progress(12, 0, 10), 1);
+assert.equal(appMath.progress(-3, 0, -5), 0.6);
+assert.equal(appMath.progress(3, 3, 3), 1);
 
 // numbered digest + overdue copy
 const g = { id: 9, title: "Pills", due_date: "2026-09-05", status: "active", type: "numbered", start_value: 10, target_value: 0, current_value: 8 };
@@ -104,5 +102,15 @@ assert.deepEqual(mixedDigest.lines, [
 	"Pills — 3 days left · 8 → 0 ↓ · 2/day",
 	"Plain — 3 days left",
 ]);
+
+// The worker keeps its own copy of the numbered math (src/ is not shipped
+// to the nix store) — assert it matches the app's copy exactly.
+assert.equal(perDay(8, 0, "2026-09-05", "2026-09-02"), appMath.perDay(8, 0, "2026-09-05", "2026-09-02"));
+assert.equal(numberedDigestLine(g, "2026-09-02"), appMath.numberedDigestLine(g, "2026-09-02"));
+assert.equal(numberedDigestLine(gu, "2026-09-02"), appMath.numberedDigestLine(gu, "2026-09-02"));
+assert.equal(
+	numberedOverdueBody({ ...g, due_date: "2026-08-30", current_value: 3 }),
+	appMath.numberedOverdueBody({ ...g, due_date: "2026-08-30", current_value: 3 }),
+);
 
 console.log("reminder logic OK");
