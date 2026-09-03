@@ -147,5 +147,18 @@ test.describe("PomoTasker Goals", () => {
 		await page.waitForTimeout(500);
 		await expect(card.locator(".goal-due")).toContainText("1/day");
 		await expect(card.locator(".progress-fill")).toHaveAttribute("style", /width:\s*20%/);
+
+		// Edit start 0 → 100: counter resets to 100, per-day + progress recompute
+		await card.getByRole("button", { name: "Edit" }).click();
+		await page.waitForTimeout(300);
+		const nums2 = page.locator('.dialog input[type="number"]');
+		await nums2.nth(0).fill("100");
+		await page.locator(".submit-btn").click();
+		await page.locator(".dialog").waitFor({ state: "hidden" });
+		await page.waitForTimeout(500);
+		// 100 → 5: 95 left over runway 4 → 24/day, progress 0%
+		await expect(card.locator(".counter-input")).toHaveValue("100");
+		await expect(card.locator(".goal-due")).toContainText("24/day");
+		await expect(card.locator(".progress-fill")).toHaveAttribute("style", /width:\s*0%/);
 	});
 });

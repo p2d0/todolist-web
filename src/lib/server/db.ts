@@ -662,8 +662,11 @@ export function updateGoal(id, { title, description, dueDate, type, startValue, 
 	const t = type === "numbered" ? "numbered" : "text";
 	const start = t === "numbered" ? (startValue ?? goal.start_value) : null;
 	const target = t === "numbered" ? (targetValue ?? goal.target_value) : null;
-	// Dialog never touches current; switching text→numbered starts the counter at start.
-	const current = t === "numbered" ? (goal.current_value ?? start) : null;
+	// Changing start resets the counter to the new start (incl. text→numbered);
+	// otherwise the live current value is preserved.
+	const startChanged =
+		t === "numbered" && startValue !== undefined && startValue !== goal.start_value;
+	const current = t === "numbered" ? (startChanged ? startValue : goal.current_value ?? start) : null;
 	db.prepare(
 		"UPDATE goals SET title = ?, description = ?, due_date = ?, type = ?, start_value = ?, target_value = ?, current_value = ? WHERE id = ?",
 	).run(
