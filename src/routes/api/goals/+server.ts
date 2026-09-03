@@ -14,6 +14,20 @@ export async function POST({ request }) {
 	if (!body.dueDate) {
 		return json({ error: "missing due_date" }, { status: 400 });
 	}
-	const id = addGoal(body.title, body.description ?? "", body.dueDate);
+	const type = body.type === "numbered" ? "numbered" : "text";
+	if (
+		type === "numbered" &&
+		(!Number.isInteger(body.startValue) || !Number.isInteger(body.targetValue))
+	) {
+		return json({ error: "start and target must be integers" }, { status: 400 });
+	}
+	const id = addGoal(
+		body.title,
+		body.description ?? "",
+		body.dueDate,
+		type,
+		body.startValue ?? null,
+		body.targetValue ?? null,
+	);
 	return json({ id });
 }

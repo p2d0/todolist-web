@@ -4,6 +4,7 @@
   import { base } from '$app/paths';
   import { send } from '$lib/stores/sync.js';
   import { ensureGoalPush } from '$lib/stores/goal-push.js';
+  import { perDay, progress, arrowFor } from '$lib/goal-math.js';
 
   const dispatch = createEventDispatcher();
 
@@ -116,6 +117,23 @@
     if (showArchived) loadArchived();
   }
 
+  async function setValue(goal, value) {
+    if (!Number.isInteger(value)) return;
+    await fetch(`${base}/api/goals/${goal.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'value', value }),
+    });
+    send({ type: 'goals:update' });
+    await load();
+  }
+
+  function onCounterEdit(goal, raw) {
+    if (raw === '') return;
+    const v = Number(raw);
+    if (Number.isInteger(v)) setValue(goal, v);
+  }
+
   onMount(() => {
     load();
     checkPush();
@@ -146,23 +164,50 @@
     <h3 class="section-title">Active</h3>
     {#each activeGoals as goal (goal.id)}
       <div class="goal-card" class:overdue={isOverdue(goal)}>
-        <div class="goal-main">
-          <div class="goal-title-line">
-            <span class="goal-title">{goal.title}</span>
-            {#if isOverdue(goal)}
-              <span class="overdue-badge">Overdue by {daysOverdue(goal)}d</span>
+        <div class="card-top">
+          <div class="goal-main">
+            <div class="goal-title-line">
+              <span class="goal-title">{goal.title}</span>
+              {#if isOverdue(goal)}
+                <span class="overdue-badge">Overdue by {daysOverdue(goal)}d</span>
+              {/if}
+            </div>
+            {#if goal.description}
+              <div class="goal-desc">{goal.description}</div>
             {/if}
+            {#if goal.type === 'numbered'}
+              <div class="counter-row">
+                <button class="step-btn" on:click={() => setValue(goal, goal.current_value - 1)}>−</button>
+                <input
+                  class="counter-input"
+                  type="number"
+                  step="1"
+                  value={goal.current_value}
+                  on:change={(e) => onCounterEdit(goal, e.target.value)}
+                />
+                <button class="step-btn" on:click={() => setValue(goal, goal.current_value + 1)}>+</button>
+                <span class="counter-target">→ {goal.target_value} {arrowFor(goal)}</span>
+              </div>
+            {/if}
+            <div class="goal-due">
+              {#if goal.type === 'numbered'}
+                Due {formatDue(goal.due_date)} · {perDay(goal.current_value, goal.target_value, goal.due_date, today())}/day
+              {:else}
+                Due {formatDue(goal.due_date)}
+              {/if}
+            </div>
           </div>
-          {#if goal.description}
-            <div class="goal-desc">{goal.description}</div>
-          {/if}
-          <div class="goal-due">Due {formatDue(goal.due_date)}</div>
+          <div class="goal-actions">
+            <button class="complete-btn" on:click={() => setStatus(goal, 'complete')}>Complete</button>
+            <button class="edit-btn" on:click={() => dispatch('edit', { goal })}>Edit</button>
+            <button class="archive-btn" title="Archive" on:click={() => setStatus(goal, 'archive')}>🗄</button>
+          </div>
         </div>
-        <div class="goal-actions">
-          <button class="complete-btn" on:click={() => setStatus(goal, 'complete')}>Complete</button>
-          <button class="edit-btn" on:click={() => dispatch('edit', { goal })}>Edit</button>
-          <button class="archive-btn" title="Archive" on:click={() => setStatus(goal, 'archive')}>🗄</button>
-        </div>
+        {#if goal.type === 'numbered'}
+          <div class="progress-track">
+            <div class="progress-fill" style="width: {Math.round(progress(goal.current_value, goal.start_value ?? goal.current_value, goal.target_value) * 100)}%"></div>
+          </div>
+        {/if}
       </div>
     {:else}
       <div class="empty">No active goals. Tap + to add one.</div>
@@ -174,18 +219,20 @@
       <h3 class="section-title">Completed</h3>
       {#each completedGoals as goal (goal.id)}
         <div class="goal-card completed">
-          <div class="goal-main">
-            <div class="goal-title-line">
-              <span class="goal-title">{goal.title}</span>
+          <div class="card-top">
+            <div class="goal-main">
+              <div class="goal-title-line">
+                <span class="goal-title">{goal.title}</span>
+              </div>
+              {#if goal.description}
+                <div class="goal-desc">{goal.description}</div>
+              {/if}
+              <div class="goal-due">Completed</div>
             </div>
-            {#if goal.description}
-              <div class="goal-desc">{goal.description}</div>
-            {/if}
-            <div class="goal-due">Completed</div>
-          </div>
-          <div class="goal-actions">
-            <button class="reopen-btn" on:click={() => setStatus(goal, 'reopen')}>Reopen</button>
-            <button class="delete-btn" title="Delete" on:click={() => setStatus(goal, 'delete')}>🗑</button>
+            <div class="goal-actions">
+              <button class="reopen-btn" on:click={() => setStatus(goal, 'reopen')}>Reopen</button>
+              <button class="delete-btn" title="Delete" on:click={() => setStatus(goal, 'delete')}>🗑</button>
+            </div>
           </div>
         </div>
       {/each}
@@ -201,18 +248,20 @@
     {:else}
       {#each archivedGoals as goal (goal.id)}
         <div class="goal-card archived">
-          <div class="goal-main">
-            <div class="goal-title-line">
-              <span class="goal-title">{goal.title}</span>
+          <div class="card-top">
+            <div class="goal-main">
+              <div class="goal-title-line">
+                <span class="goal-title">{goal.title}</span>
+              </div>
+              {#if goal.description}
+                <div class="goal-desc">{goal.description}</div>
+              {/if}
+              <div class="goal-due">Due {formatDue(goal.due_date)}</div>
             </div>
-            {#if goal.description}
-              <div class="goal-desc">{goal.description}</div>
-            {/if}
-            <div class="goal-due">Due {formatDue(goal.due_date)}</div>
-          </div>
-          <div class="goal-actions">
-            <button class="reopen-btn" on:click={() => setStatus(goal, 'reopen')}>Restore</button>
-            <button class="delete-btn" title="Delete" on:click={() => setStatus(goal, 'delete')}>🗑</button>
+            <div class="goal-actions">
+              <button class="reopen-btn" on:click={() => setStatus(goal, 'reopen')}>Restore</button>
+              <button class="delete-btn" title="Delete" on:click={() => setStatus(goal, 'delete')}>🗑</button>
+            </div>
           </div>
         </div>
       {/each}
@@ -279,9 +328,79 @@
     border-radius: 12px;
     padding: 12px;
     display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .card-top {
+    display: flex;
     justify-content: space-between;
     align-items: flex-start;
     gap: 8px;
+    flex: 1;
+  }
+
+  .counter-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  .step-btn {
+    border: none;
+    background: #363a4f;
+    color: #cdd6f4;
+    border-radius: 8px;
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .counter-input {
+    background: #363a4f;
+    border: 1px solid #454a60;
+    border-radius: 8px;
+    color: #cdd6f4;
+    font-size: 14px;
+    width: 64px;
+    padding: 5px 8px;
+    text-align: center;
+    -moz-appearance: textfield;
+    appearance: textfield; /* no native spinners — the +/− buttons are ours */
+  }
+
+  .counter-input::-webkit-outer-spin-button,
+  .counter-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .counter-input:focus {
+    outline: none;
+    border-color: #b4befe;
+  }
+
+  .counter-target {
+    color: #a6adc8;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .progress-track {
+    height: 4px;
+    background: #363a4f;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: #89b4fa;
+    border-radius: 999px;
   }
 
   .goal-card.overdue {

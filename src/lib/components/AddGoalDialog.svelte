@@ -11,6 +11,9 @@
   let title = editingGoal?.title || '';
   let description = editingGoal?.description || '';
   let dueDate = editingGoal?.due_date || dayjs().format('YYYY-MM-DD');
+  let type = editingGoal?.type === 'numbered' ? 'numbered' : 'text';
+  let startValue = editingGoal?.start_value ?? '';
+  let targetValue = editingGoal?.target_value ?? '';
 
   onMount(() => {
     window._dialogCount = (window._dialogCount || 0) + 1;
@@ -36,7 +39,15 @@
       title: title.trim(),
       description: description.trim(),
       dueDate,
+      type,
     };
+    if (type === 'numbered') {
+      const start = Number(startValue);
+      const target = Number(targetValue);
+      if (startValue === '' || !Number.isInteger(start) || !Number.isInteger(target)) return;
+      body.startValue = start;
+      body.targetValue = target;
+    }
     const url = editingGoal
       ? `${base}/api/goals/${editingGoal.id}`
       : `${base}/api/goals`;
@@ -72,6 +83,25 @@
     Due date
     <input type="date" bind:value={dueDate} />
   </label>
+
+  <label>
+    Type
+    <select bind:value={type}>
+      <option value="text">Text</option>
+      <option value="numbered">Numbered</option>
+    </select>
+  </label>
+
+  {#if type === 'numbered'}
+    <div class="row2">
+      <label>Start
+        <input type="number" step="1" bind:value={startValue} placeholder="e.g. 12" />
+      </label>
+      <label>Target
+        <input type="number" step="1" bind:value={targetValue} placeholder="e.g. 0" />
+      </label>
+    </div>
+  {/if}
 
   <div class="actions">
     <button class="cancel-btn" on:click={() => dispatch('close')}>Cancel</button>
@@ -118,7 +148,7 @@
     margin-bottom: 12px;
   }
 
-  input, textarea {
+  input, textarea, select {
     background: #363a4f;
     border: 1px solid #454a60;
     border-radius: 8px;
@@ -127,6 +157,17 @@
     font-size: 14px;
     font-family: inherit;
     resize: vertical;
+  }
+
+  .row2 {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .row2 label {
+    flex: 1;
+    margin-bottom: 0;
   }
 
   input:focus, textarea:focus {

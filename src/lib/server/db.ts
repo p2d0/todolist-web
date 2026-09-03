@@ -16,6 +16,7 @@ export function getDb() {
 		initSchema(db);
 		migrateGroups(db);
 		migrateArchive(db);
+		migrateGoalType(db);
 	}
 	return db;
 }
@@ -67,6 +68,10 @@ function initSchema(db) {
       description TEXT NOT NULL DEFAULT '',
       due_date TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT 'active',
+      type TEXT NOT NULL DEFAULT 'text',
+      start_value INTEGER,
+      target_value INTEGER,
+      current_value INTEGER,
       completed_at TEXT,
       created_at TEXT NOT NULL
     );
@@ -91,6 +96,18 @@ function initSchema(db) {
       PRIMARY KEY (subscription_id, sent_on)
     );
   `);
+}
+
+function migrateGoalType(db) {
+	const cols = db.prepare("PRAGMA table_info(goals)").all();
+	if (!cols.some((c) => c.name === "type")) {
+		db.exec("ALTER TABLE goals ADD COLUMN type TEXT NOT NULL DEFAULT 'text'");
+	}
+	for (const col of ["start_value", "target_value", "current_value"]) {
+		if (!db.prepare("PRAGMA table_info(goals)").all().some((c) => c.name === col)) {
+			db.exec(`ALTER TABLE goals ADD COLUMN ${col} INTEGER`);
+		}
+	}
 }
 
 function migrateArchive(db) {
@@ -612,22 +629,59 @@ export function getGoal(id) {
 	return db.prepare("SELECT * FROM goals WHERE id = ?").get(id);
 }
 
-export function addGoal(title, description, dueDate) {
+export function addGoal(
+	title,
+	description,
+	dueDate,
+	type = "text",
+	startValue = null,
+	targetValue = null,
+) {
 	const db = getDb();
+	const numbered = type === "numbered";
 	const result = db
 		.prepare(
-			"INSERT INTO goals (title, description, due_date, status, created_at) VALUES (?, ?, ?, 'active', ?)",
+			"INSERT INTO goals (title, description, due_date, status, type, start_value, target_value, current_value, created_at) VALUES (?, ?, ?, 'active', ?, ?, ?, ?, ?)",
 		)
-		.run(title, description ?? "", dueDate, now());
+		.run(
+			title,
+			description ?? "",
+			dueDate,
+			type,
+			numbered ? startValue : null,
+			numbered ? targetValue : null,
+			numbered ? startValue : null,
+			now(),
+		);
 	return result.lastInsertRowid;
 }
 
-export function updateGoal(id, title, description, dueDate) {
+export function updateGoal(id, { title, description, dueDate, type, startValue, targetValue }) {
 	const db = getDb();
-	db.prepare("UPDATE goals SET title = ?, description = ?, due_date = ? WHERE id = ?").run(
-		title,
-		description ?? "",
-		dueDate,
+	const goal = getGoal(id);
+	const t = type === "numbered" ? "numbered" : "text";
+	const start = t === "numbered" ? (startValue ?? goal.start_value) : null;
+	const target = t === "numbered" ? (targetValue ?? goal.target_value) : null;
+	// Dialog never touches current; switching text→numbered starts the counter at start.
+	const current = t === "numbered" ? (goal.current_value ?? start) : null;
+	db.prepare(
+		"UPDATE goals SET title = ?, description = ?, due_date = ?, type = ?, start_value = ?, target_value = ?, current_value = ? WHERE id = ?",
+	).run(
+		title ?? goal.title,
+		description ?? goal.description,
+		dueDate ?? goal.due_date,
+		t,
+		start,
+		target,
+		current,
+		id,
+	);
+}
+
+export function updateGoalValue(id, current) {
+	const db = getDb();
+	db.prepare("UPDATE goals SET current_value = ? WHERE id = ? AND type = 'numbered'").run(
+		current,
 		id,
 	);
 }

@@ -115,4 +115,37 @@ test.describe("PomoTasker Goals", () => {
 		await page.waitForTimeout(500);
 		await expect(page.locator(".goal-card").filter({ hasText: title })).toBeVisible();
 	});
+
+	test("numbered goal: counter updates per-day and progress", async ({ page }) => {
+		const title = `goal-e2e-${stamp}-numbered`;
+		await page.getByRole("button", { name: "Goals" }).click();
+		await page.waitForTimeout(300);
+
+		await page.getByRole("button", { name: "Add habit" }).click();
+		await page.waitForTimeout(300);
+		await page.getByRole("textbox", { name: "Title" }).fill(title);
+		await page.getByRole("combobox", { name: "Type" }).selectOption("numbered");
+		const due = new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10);
+		await page.locator('.dialog input[type="date"]').fill(due);
+		const nums = page.locator('.dialog input[type="number"]');
+		await nums.nth(0).fill("0");
+		await nums.nth(1).fill("5");
+		await page.locator(".submit-btn").click();
+		await page.locator(".dialog").waitFor({ state: "hidden" });
+		await page.waitForTimeout(500);
+
+		const card = page.locator(".goal-card").filter({ hasText: title });
+		await expect(card).toBeVisible();
+		await expect(card.locator(".counter-input")).toBeVisible();
+		await expect(card.locator(".counter-target")).toContainText("5");
+		// start 0 → target 5, due in 3 days: runway 4 → ceil(5/4) = 2/day, progress 0%
+		await expect(card.locator(".goal-due")).toContainText("2/day");
+		await expect(card.locator(".progress-fill")).toHaveAttribute("style", /width:\s*0%/);
+
+		// + → current 1 → 4 left → ceil(4/4) = 1/day, progress 20%
+		await card.getByRole("button", { name: "+" }).click();
+		await page.waitForTimeout(500);
+		await expect(card.locator(".goal-due")).toContainText("1/day");
+		await expect(card.locator(".progress-fill")).toHaveAttribute("style", /width:\s*20%/);
+	});
 });

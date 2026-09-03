@@ -9,6 +9,14 @@ import Database from "better-sqlite3";
 import webpush from "web-push";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import path from "path";
+import {
+	daysUntil,
+	daysText,
+	numberedDigestLine,
+	numberedOverdueBody,
+} from "./src/lib/goal-math.js";
+
+export { daysUntil, daysText };
 
 const dbPath = path.join(process.cwd(), "data", "pomotasker.db");
 const vapidPath = path.join(process.cwd(), "data", "vapid.json");
@@ -32,6 +40,10 @@ function getDb() {
         description TEXT NOT NULL DEFAULT '',
         due_date TEXT NOT NULL,
         status TEXT NOT NULL DEFAULT 'active',
+        type TEXT NOT NULL DEFAULT 'text',
+        start_value INTEGER,
+        target_value INTEGER,
+        current_value INTEGER,
         completed_at TEXT,
         created_at TEXT NOT NULL
       );
@@ -53,8 +65,22 @@ function getDb() {
         PRIMARY KEY (subscription_id, sent_on)
       );
     `);
+		migrateGoals(db);
 	}
 	return db;
+}
+
+// CREATE TABLE IF NOT EXISTS doesn't add columns to pre-existing dbs.
+function migrateGoals(d) {
+	const cols = d.prepare("PRAGMA table_info(goals)").all();
+	if (!cols.some((c) => c.name === "type")) {
+		d.exec("ALTER TABLE goals ADD COLUMN type TEXT NOT NULL DEFAULT 'text'");
+	}
+	for (const col of ["start_value", "target_value", "current_value"]) {
+		if (!d.prepare("PRAGMA table_info(goals)").all().some((c) => c.name === col)) {
+			d.exec(`ALTER TABLE goals ADD COLUMN ${col} INTEGER`);
+		}
+	}
 }
 
 function getVapidKeys() {
@@ -90,17 +116,6 @@ export function computeReminderJobs(goals, subscriptions, nowMs) {
 	return jobs;
 }
 
-export function daysUntil(localDate, dueDate) {
-	return Math.round((Date.parse(dueDate) - Date.parse(localDate)) / 86400000);
-}
-
-export function daysText(days) {
-	if (days > 0) return days === 1 ? "1 day left" : `${days} days left`;
-	if (days === 0) return "Due today";
-	const n = -days;
-	return n === 1 ? "1 day overdue" : `${n} days overdue`;
-}
-
 function localDateFor(sub, nowMs) {
 	const offset = sub.tz_offset_minutes || 0;
 	return new Date(nowMs + offset * 60000).toISOString().slice(0, 10);
@@ -120,7 +135,11 @@ export function computeDigestJobs(goals, subscriptions, nowMs) {
 		const lines = goals
 			.filter((g) => g.status === "active")
 			.sort((a, b) => a.due_date.localeCompare(b.due_date))
-			.map((g) => `${g.title} — ${daysText(daysUntil(localDate, g.due_date))}`);
+			.map((g) =>
+				g.type === "numbered"
+					? numberedDigestLine(g, localDate)
+					: `${g.title} — ${daysText(daysUntil(localDate, g.due_date))}`,
+			);
 		if (lines.length) jobs.push({ sub, localDate, lines });
 	}
 	return jobs;
@@ -176,9 +195,13 @@ export function runGoalReminderTick(nowMs = Date.now()) {
 			.prepare("SELECT 1 FROM goal_reminders WHERE goal_id = ? AND sent_on = ?")
 			.get(job.goal.id, job.localDate);
 		if (already) continue;
+		const body =
+			job.goal.type === "numbered"
+				? numberedOverdueBody(job.goal)
+				: `Overdue since ${job.goal.due_date} — act on it today`;
 		const payload = JSON.stringify({
 			title: job.goal.title,
-			body: `Overdue since ${job.goal.due_date} — act on it today`,
+			body,
 			goalId: job.goal.id,
 		});
 		const subObj = { endpoint: job.sub.endpoint, keys: JSON.parse(job.sub.keys_json) };
